@@ -53,4 +53,21 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual("Jane, Doe <JANE@example.org>".emailAddressOnly, "jane@example.org")
         XCTAssertEqual("\"Doe, Jane\" <j@x.org>, b@y.org".splitAddresses.count, 2)
     }
+
+    func testGoogleErrorBodyIsShownInsteadOfDecodingError() {
+        let body = Data(#"{"error":{"code":403,"message":"Gmail API has not been used in project 1 before or it is disabled."}}"#.utf8)
+        XCTAssertThrowsError(try GmailClient.decode(GmailProfile.self, from: body)) { error in
+            XCTAssertEqual(error.localizedDescription, "Gmail API has not been used in project 1 before or it is disabled.")
+        }
+        let oauth = Data(#"{"error":"invalid_grant","error_description":"Bad Request"}"#.utf8)
+        XCTAssertThrowsError(try GmailClient.decode(TokenResponse.self, from: oauth)) { error in
+            XCTAssertEqual(error.localizedDescription, "Bad Request")
+        }
+    }
+
+    func testMissingFieldIsNamed() {
+        XCTAssertThrowsError(try GmailClient.decode(GmailProfile.self, from: Data(#"{"historyId":"1"}"#.utf8))) { error in
+            XCTAssertEqual(error.localizedDescription, "Gmail returned an incomplete response (missing emailAddress).")
+        }
+    }
 }

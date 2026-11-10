@@ -4,12 +4,14 @@ enum GmailError: LocalizedError {
     case http(Int, String)
     case historyExpired
     case invalidResponse
+    case incomplete(String)
 
     var errorDescription: String? {
         switch self {
         case let .http(code, message): return message.isEmpty ? "Gmail returned status \(code)." : message
         case .historyExpired: return "Mail history expired."
         case .invalidResponse: return "Gmail returned an unexpected response."
+        case let .incomplete(detail): return "Gmail returned an incomplete response (\(detail))."
         }
     }
 }
@@ -59,12 +61,49 @@ struct GmailClient {
     }
 
     /// Google's human-readable reason from a JSON error body, or "" if there is none.
+    /// Handles both API errors ({"error": {"message": ...}}) and OAuth errors ({"error": "...", "error_description": ...}).
     static func message(from data: Data) -> String {
-        struct Envelope: Decodable {
+        struct APIEnvelope: Decodable {
             struct Inner: Decodable { let message: String? }
             let error: Inner?
         }
-        return (try? JSONDecoder().decode(Envelope.self, from: data))?.error?.message ?? ""
+        struct OAuthEnvelope: Decodable {
+            let error: String?
+            let error_description: String?
+        }
+        if let message = (try? JSONDecoder().decode(APIEnvelope.self, from: data))?.error?.message, !message.isEmpty {
+            return message
+        }
+        if let body = try? JSONDecoder().decode(OAuthEnvelope.self, from: data) {
+            return body.error_description ?? body.error ?? ""
+        }
+        return ""
+    }
+
+    /// Decodes a Google response. If it doesn't have the expected shape, throws Google's own reason when the body
+    /// carries one, otherwise names what was missing instead of Foundation's generic "data is missing" text.
+    static func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+        do {
+            return try JSONDecoder().decode(type, from: data)
+        } catch let error as DecodingError {
+            let reason = message(from: data)
+            if !reason.isEmpty { throw GmailError.http(0, reason) }
+            throw GmailError.incomplete(describe(error))
+        }
+    }
+
+    private static func describe(_ error: DecodingError) -> String {
+        func path(_ codingPath: [CodingKey], _ key: CodingKey? = nil) -> String {
+            let keys = (codingPath + (key.map { [$0] } ?? [])).map { $0.intValue.map { "[\($0)]" } ?? $0.stringValue }
+            return keys.isEmpty ? "response" : keys.joined(separator: ".")
+        }
+        switch error {
+        case let .keyNotFound(key, context): return "missing \(path(context.codingPath, key))"
+        case let .valueNotFound(_, context): return "empty \(path(context.codingPath))"
+        case let .typeMismatch(_, context): return "unexpected value for \(path(context.codingPath))"
+        case .dataCorrupted: return "not valid JSON"
+        @unknown default: return "unreadable"
+        }
     }
 
     private func url(_ path: String, _ query: [(String, String)] = []) -> URL {
@@ -77,7 +116,7 @@ struct GmailClient {
 
     private func get<T: Decodable>(_ path: String, _ query: [(String, String)] = []) async throws -> T {
         let data = try await perform(URLRequest(url: url(path, query)))
-        return try JSONDecoder().decode(T.self, from: data)
+        return try Self.decode(T.self, from: data)
     }
 
     @discardableResult

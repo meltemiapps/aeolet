@@ -77,7 +77,7 @@ enum GoogleOAuth {
             "redirect_uri": AppConfig.redirectURI,
         ])
         guard status == 200 else { throw AuthError.server(serverMessage(data, status: status)) }
-        return try JSONDecoder().decode(TokenResponse.self, from: data)
+        return try GmailClient.decode(TokenResponse.self, from: data)
     }
 
     static func refresh(_ refreshToken: String, account: String) async throws -> TokenResponse {
@@ -90,7 +90,7 @@ enum GoogleOAuth {
             throw AuthError.reauthenticationRequired(account)
         }
         guard status == 200 else { throw AuthError.server(serverMessage(data, status: status)) }
-        return try JSONDecoder().decode(TokenResponse.self, from: data)
+        return try GmailClient.decode(TokenResponse.self, from: data)
     }
 
     static func revoke(_ token: String) async {

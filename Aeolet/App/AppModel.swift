@@ -59,7 +59,7 @@ final class AppModel: ObservableObject {
         let (data, response) = try await URLSession(configuration: .ephemeral).data(for: request)
         guard let status = (response as? HTTPURLResponse)?.statusCode else { throw GmailError.invalidResponse }
         guard (200..<300).contains(status) else { throw GmailError.http(status, GmailClient.message(from: data)) }
-        return try JSONDecoder().decode(GmailProfile.self, from: data).emailAddress
+        return try GmailClient.decode(GmailProfile.self, from: data).emailAddress
     }
 
     func signOut(_ account: String) async {
