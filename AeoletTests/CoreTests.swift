@@ -98,4 +98,11 @@ final class CoreTests: XCTestCase {
             XCTAssertEqual(error.localizedDescription, "Gmail returned an incomplete response (missing threads[0].id).")
         }
     }
+
+    func testNetworkErrorsReadPlainly() {
+        XCTAssertEqual(URLError(.notConnectedToInternet).userMessage, "You're offline. Check your connection and try again.")
+        XCTAssertEqual(URLError(.timedOut).userMessage, "Gmail took too long to respond. Try again.")
+        XCTAssertFalse(URLError(.cannotFindHost).userMessage.contains("NSURLErrorDomain"))
+        XCTAssertEqual(GmailError.http(403, "Quota exceeded").userMessage, "Quota exceeded")
+    }
 }

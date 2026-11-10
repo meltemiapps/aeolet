@@ -64,7 +64,7 @@ final class MailboxModel: ObservableObject {
         } catch let error as URLError where error.code == .cancelled {
             return
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
 
@@ -78,7 +78,7 @@ final class MailboxModel: ObservableObject {
             threads += page.items.filter { !known.contains($0.id) }
             nextPage = page.next
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
 
@@ -89,7 +89,7 @@ final class MailboxModel: ObservableObject {
             try await action()
         } catch {
             threads = snapshot
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
 

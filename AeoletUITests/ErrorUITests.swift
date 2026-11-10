@@ -50,7 +50,8 @@ final class ErrorUITests: AeoletUITestCase {
 
         pullToRefresh()
         RunLoop.current.run(until: Date().addingTimeInterval(2))
-        XCTAssertTrue(offline.exists)
+        XCTAssertTrue(anyText(containing: "You're offline").exists, "Refreshing offline lost the clear message")
+        XCTAssertFalse(anyText(containing: "NSURLErrorDomain").exists, "Raw error code shown")
 
         open("Dinner on Friday?")
         XCTAssertTrue(anyText(containing: "offline").waitForExistence(timeout: 20), "Opening a thread offline gave no message")

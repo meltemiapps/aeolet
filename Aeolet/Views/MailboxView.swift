@@ -66,6 +66,7 @@ struct MailboxView: View {
                 }
             }
             .listStyle(.plain)
+            .refreshable { await model.refresh() }
             .overlay {
                 if model.threads.isEmpty {
                     if model.isLoading {
@@ -77,12 +78,11 @@ struct MailboxView: View {
             }
             .navigationTitle(model.title)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $model.query, prompt: "Search mail")
+            .searchable(text: $model.query, placement: Self.searchPlacement, prompt: "Search mail")
             .onSubmit(of: .search) { Task { await model.runSearch() } }
             .onChange(of: model.query) { _, value in
                 if value.isEmpty { Task { await model.clearSearch() } }
             }
-            .refreshable { await model.refresh() }
             .navigationDestination(for: ThreadSummary.self) { thread in
                 ThreadDetailView(account: account, summary: thread, mailbox: model)
             }
@@ -107,6 +107,14 @@ struct MailboxView: View {
         .sheet(item: $compose) { context in
             ComposeView(account: account, context: context)
         }
+    }
+}
+
+extension MailboxView {
+    /// On iPad the default search field sits in the top toolbar, and there it stops the list's
+    /// pull-to-refresh control from being installed. The search drawer under the title keeps both working.
+    static var searchPlacement: SearchFieldPlacement {
+        UIDevice.current.userInterfaceIdiom == .pad ? .navigationBarDrawer(displayMode: .always) : .automatic
     }
 }
 

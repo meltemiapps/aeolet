@@ -109,7 +109,7 @@ struct PGPKeysView: View {
             message = "Added a key for \(added.joined(separator: ", ")). Confirm the fingerprint before relying on it."
             lookupEmail = ""
         } catch {
-            message = error.localizedDescription
+            message = error.userMessage
         }
     }
 }
@@ -186,7 +186,7 @@ struct GenerateKeyView: View {
             try await pgp.generateKey(account: account, name: name, passphrase: passphrase)
             dismiss()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
 }
@@ -242,7 +242,7 @@ struct PasteKeyView: View {
             }
             dismiss()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
 }

@@ -147,7 +147,7 @@ final class ComposeModel: ObservableObject {
             return true
         } catch {
             if sign, "\(error)".lowercased().contains("passphrase") { pgp.forgetPassphrases() }
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
             return false
         }
     }
@@ -171,7 +171,7 @@ final class ComposeModel: ObservableObject {
             try await client.saveDraft(message: message, threadID: isReply ? context.source?.threadID : nil)
             return true
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
             return false
         }
     }

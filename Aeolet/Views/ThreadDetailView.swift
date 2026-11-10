@@ -109,7 +109,7 @@ struct ThreadDetailView: View {
             mailbox.removeLocally(summary.id)
             dismiss()
         } catch {
-            model.errorMessage = error.localizedDescription
+            model.errorMessage = error.userMessage
         }
     }
 }

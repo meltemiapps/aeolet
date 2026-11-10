@@ -120,7 +120,7 @@ struct SignInView: View {
                 .controlSize(.large)
                 .disabled(app.isSigningIn)
 
-                Text("Your password goes only to Google. Aeolet receives a revocable token, stored in your iPhone's Keychain.")
+                Text("Your password goes only to Google. Aeolet receives a revocable token, stored in this device's Keychain.")
                     .font(.footnote)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)

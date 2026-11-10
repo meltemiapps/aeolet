@@ -49,7 +49,7 @@ final class AppModel: ObservableObject {
         } catch AuthError.cancelled {
             return
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
 

@@ -117,7 +117,7 @@ class AeoletUITestCase: XCTestCase {
         let screen = app.windows.firstMatch.frame
         let navigation = app.navigationBars.firstMatch
         let search = app.searchFields.firstMatch
-        let top = navigation.exists ? navigation.frame.maxY - 4 : screen.minY + 60
+        let top = navigation.exists ? min(navigation.frame.maxY - 4, screen.minY + 140) : screen.minY + 60
         let bottom = search.exists && search.frame.minY > screen.midY ? search.frame.minY - 8 : screen.maxY - 30
         func clear() -> Bool {
             guard target.exists, target.isHittable else { return false }
@@ -152,6 +152,9 @@ class AeoletUITestCase: XCTestCase {
         let search = app.searchFields["Search mail"]
         if search.buttons["Clear text"].exists { search.buttons["Clear text"].tap() }
         if app.buttons["close"].exists { app.buttons["close"].tap() }
+        // iPad's search drawer stays active with a Cancel button, which hides the toolbar.
+        let cancel = app.navigationBars.buttons["Cancel"]
+        if cancel.exists { cancel.tap() }
     }
 
     func goBack() {
@@ -165,13 +168,29 @@ class AeoletUITestCase: XCTestCase {
         start.press(forDuration: 0.05, thenDragTo: end)
     }
 
-    /// A slow pull from the first row, held at the bottom, the way a person pulls to refresh.
+    /// Pulls the list down to refresh. Gestures land differently on iPhone and iPad, so it tries a held
+    /// drag and then a plain swipe, stopping as soon as the app asks the server for the list again.
     func pullToRefresh() {
         let list = app.collectionViews.firstMatch
+        let before = logPosition
+        let refreshed = { self.log.contains { Self.number(of: $0) > before && ($0.contains("LIST") || $0.contains("OFFLINE")) } }
         let firstRow = list.cells.firstMatch
-        let start = (firstRow.exists ? firstRow : list).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
-        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 450)),
-                    withVelocity: .slow, thenHoldForDuration: 0.6)
+        let start = (firstRow.exists ? firstRow : list).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        let attempts: [() -> Void] = [
+            { start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 500))) },
+            { start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 500)),
+                          withVelocity: .slow, thenHoldForDuration: 0.6) },
+            { list.swipeDown(velocity: .slow) },
+            { list.swipeDown() },
+        ]
+        for attempt in attempts {
+            attempt()
+            let deadline = Date().addingTimeInterval(3)
+            while Date() < deadline {
+                if refreshed() { return }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            }
+        }
     }
 
     // MARK: Screens
@@ -184,8 +203,10 @@ class AeoletUITestCase: XCTestCase {
     func showLabel(_ name: String) {
         openFolders()
         // Folder rows read "Travel" or "Travel, 2" when there is unread mail.
-        let candidates = app.buttons.matching(NSPredicate(format: "label == %@ OR label BEGINSWITH %@", name, name + ","))
-        let target = candidates.allElementsBoundByIndex.first { $0.isHittable } ?? candidates.firstMatch
+        let folders = app.collectionViews.containing(.button, identifier: "Add Gmail account").firstMatch
+        let target = folders.buttons.matching(NSPredicate(format: "label == %@ OR label BEGINSWITH %@", name, name + ",")).firstMatch
+        // On iPad the folder sheet is a smaller card, so lower folders may need a scroll.
+        for _ in 0..<4 where !(target.exists && target.isHittable) { folders.swipeUp(velocity: .slow) }
         target.tap()
         XCTAssertTrue(app.navigationBars[name].waitForExistence(timeout: 10), "Did not switch to \(name)")
     }

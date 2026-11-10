@@ -106,7 +106,7 @@ final class ThreadModel: ObservableObject {
             }
             if pgp.isEnabled { await autoProcessPGP() }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
 
@@ -212,7 +212,7 @@ final class ThreadModel: ObservableObject {
                 $0.pgp = .decrypted(state, signer)
             }
         } catch {
-            update(id) { $0.pgp = .failed(error.localizedDescription) }
+            update(id) { $0.pgp = .failed(error.userMessage) }
         }
     }
 
@@ -277,7 +277,7 @@ final class ThreadModel: ObservableObject {
             try await client.modifyThread(threadID, add: adding ? [id] : [], remove: adding ? [] : [id])
             if adding { labelIDs.insert(id) } else { labelIDs.remove(id) }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = error.userMessage
         }
     }
     func trash() async throws { try await client.trashThread(threadID) }
