@@ -1,7 +1,7 @@
 // Aeolet build configuration. Edit these values before the first build.
 
 // From Google Cloud: the part of your iOS client ID before ".apps.googleusercontent.com".
-GOOGLE_CLIENT_PREFIX = REPLACE_ME
+GOOGLE_CLIENT_PREFIX = 477031645831-5csr86vglrlhiics2e6fatlut9ond16o
 GOOGLE_URL_SCHEME = com.googleusercontent.apps.$(GOOGLE_CLIENT_PREFIX)
 
 // Xcode > Settings > Accounts shows your team. Leave empty and pick it in Signing & Capabilities if you prefer.

@@ -56,7 +56,9 @@ final class AppModel: ObservableObject {
     private static func resolveEmail(accessToken: String) async throws -> String {
         var request = URLRequest(url: URL(string: "https://gmail.googleapis.com/gmail/v1/users/me/profile")!)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        let (data, _) = try await URLSession(configuration: .ephemeral).data(for: request)
+        let (data, response) = try await URLSession(configuration: .ephemeral).data(for: request)
+        guard let status = (response as? HTTPURLResponse)?.statusCode else { throw GmailError.invalidResponse }
+        guard (200..<300).contains(status) else { throw GmailError.http(status, GmailClient.message(from: data)) }
         return try JSONDecoder().decode(GmailProfile.self, from: data).emailAddress
     }
 

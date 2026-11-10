@@ -58,7 +58,8 @@ struct GmailClient {
         }
     }
 
-    private static func message(from data: Data) -> String {
+    /// Google's human-readable reason from a JSON error body, or "" if there is none.
+    static func message(from data: Data) -> String {
         struct Envelope: Decodable {
             struct Inner: Decodable { let message: String? }
             let error: Inner?
