@@ -56,7 +56,7 @@ final class AppModel: ObservableObject {
     private static func resolveEmail(accessToken: String) async throws -> String {
         var request = URLRequest(url: URL(string: "https://gmail.googleapis.com/gmail/v1/users/me/profile")!)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        let (data, response) = try await URLSession(configuration: .ephemeral).data(for: request)
+        let (data, response) = try await Network.ephemeral.data(for: request)
         guard let status = (response as? HTTPURLResponse)?.statusCode else { throw GmailError.invalidResponse }
         guard (200..<300).contains(status) else { throw GmailError.http(status, GmailClient.message(from: data)) }
         return try GmailClient.decode(GmailProfile.self, from: data).emailAddress
@@ -65,6 +65,8 @@ final class AppModel: ObservableObject {
     func signOut(_ account: String) async {
         await TokenStore.shared.remove(account: account)
         PGPStore.shared.deleteOwnKey(account: account)
+        MailCache.deleteAll(account: account)
+        BackgroundSync.forget(account: account)
         accounts = await TokenStore.shared.accounts()
         if currentAccount == account { currentAccount = accounts.first }
         if accounts.isEmpty { PrivateFile.deleteAll() }

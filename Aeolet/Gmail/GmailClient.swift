@@ -24,7 +24,7 @@ struct GmailClient {
     private static let uploadBase = "https://gmail.googleapis.com/upload/gmail/v1/users/me"
 
     private static let session: URLSession = {
-        let configuration = URLSessionConfiguration.ephemeral
+        let configuration = Network.configuration(.ephemeral)
         configuration.tlsMinimumSupportedProtocolVersion = .TLSv12
         configuration.urlCache = nil
         configuration.httpCookieStorage = nil
@@ -94,8 +94,12 @@ struct GmailClient {
 
     private static func describe(_ error: DecodingError) -> String {
         func path(_ codingPath: [CodingKey], _ key: CodingKey? = nil) -> String {
-            let keys = (codingPath + (key.map { [$0] } ?? [])).map { $0.intValue.map { "[\($0)]" } ?? $0.stringValue }
-            return keys.isEmpty ? "response" : keys.joined(separator: ".")
+            let keys = codingPath + (key.map { [$0] } ?? [])
+            let text = keys.reduce("") { out, key in
+                if let index = key.intValue { return out + "[\(index)]" }
+                return out.isEmpty ? key.stringValue : out + "." + key.stringValue
+            }
+            return text.isEmpty ? "response" : text
         }
         switch error {
         case let .keyNotFound(key, context): return "missing \(path(context.codingPath, key))"

@@ -64,7 +64,7 @@ enum GoogleOAuth {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = Data(fields.map { "\($0.key)=\($0.value.formEncoded)" }.joined(separator: "&").utf8)
-        let (data, response) = try await URLSession(configuration: .ephemeral).data(for: request)
+        let (data, response) = try await Network.ephemeral.data(for: request)
         return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
     }
 
@@ -128,8 +128,31 @@ final class GoogleSignIn: NSObject, ASWebAuthenticationPresentationContextProvid
             URLQueryItem(name: "prompt", value: "select_account consent"),
         ]
 
-        let callback: URL = try await withCheckedThrowingContinuation { continuation in
-            let session = ASWebAuthenticationSession(url: components.url!, callbackURLScheme: AppConfig.redirectScheme) { url, error in
+        let callback = try await callbackURL(for: components.url!, state: state)
+        let items = URLComponents(url: callback, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        guard items.first(where: { $0.name == "state" })?.value == state else { throw AuthError.stateMismatch }
+        if let failure = items.first(where: { $0.name == "error" })?.value {
+            throw failure == "access_denied" ? AuthError.cancelled : AuthError.server(failure)
+        }
+        guard let code = items.first(where: { $0.name == "code" })?.value else { throw AuthError.missingCode }
+
+        let tokens = try await GoogleOAuth.exchange(code: code, verifier: pkce.verifier)
+        guard tokens.scope?.split(separator: " ").contains(Substring(AppConfig.gmailScope)) ?? false else {
+            if let granted = tokens.refreshToken { await GoogleOAuth.revoke(granted) }
+            throw AuthError.scopeNotGranted
+        }
+        guard tokens.refreshToken != nil else { throw AuthError.missingRefreshToken }
+        return tokens
+    }
+
+    /// Shows Google's page in Apple's sign-in sheet and returns the redirect it ends on.
+    private func callbackURL(for url: URL, state: String) async throws -> URL {
+        #if DEBUG
+        if MockGmail.isActive { return await MockGmail.signInCallback(state: state) }
+        #endif
+        defer { session = nil }
+        return try await withCheckedThrowingContinuation { continuation in
+            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: AppConfig.redirectScheme) { url, error in
                 if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
                     continuation.resume(throwing: AuthError.cancelled)
                 } else if let error {
@@ -147,22 +170,6 @@ final class GoogleSignIn: NSObject, ASWebAuthenticationPresentationContextProvid
                 continuation.resume(throwing: AuthError.server("Could not open the Google sign-in page."))
             }
         }
-        session = nil
-
-        let items = URLComponents(url: callback, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        guard items.first(where: { $0.name == "state" })?.value == state else { throw AuthError.stateMismatch }
-        if let failure = items.first(where: { $0.name == "error" })?.value {
-            throw failure == "access_denied" ? AuthError.cancelled : AuthError.server(failure)
-        }
-        guard let code = items.first(where: { $0.name == "code" })?.value else { throw AuthError.missingCode }
-
-        let tokens = try await GoogleOAuth.exchange(code: code, verifier: pkce.verifier)
-        guard tokens.scope?.split(separator: " ").contains(Substring(AppConfig.gmailScope)) ?? false else {
-            if let granted = tokens.refreshToken { await GoogleOAuth.revoke(granted) }
-            throw AuthError.scopeNotGranted
-        }
-        guard tokens.refreshToken != nil else { throw AuthError.missingRefreshToken }
-        return tokens
     }
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {

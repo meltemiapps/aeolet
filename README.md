@@ -55,8 +55,18 @@ The cryptography is [OpenPGP.js](https://github.com/openpgpjs/openpgpjs), run in
 
 ## Tests
 
-- `AeoletTests`: OAuth PKCE vectors, MIME building and parsing, header-injection protection.
+- `AeoletTests`: OAuth PKCE vectors, MIME building and parsing, header-injection protection, error wording, the remote-content policy, and an OpenPGP round trip through the app's own engine.
+- `AeoletUITests`: the whole app driven end to end in the Simulator: sign-in, inbox, search, labels, compose with attachments, reply, reply all, forward, archive, star, read and unread, Bin, two accounts and signing out, remote images, Face ID lock, PGP between two accounts, Google's error responses and offline. They never touch a real Gmail account.
 - `PGP/js/test`: 24 checks in a real browser engine under the production content policy, including interoperability with GnuPG in both directions.
+- `Scripts/check-release-excludes-mock.sh`: builds Release and fails if any trace of the mock below is in it.
+
+```sh
+xcodebuild test -project Aeolet.xcodeproj -scheme Aeolet -destination "platform=iOS Simulator,name=iPhone 17"
+```
+
+### Mock Gmail
+
+Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install, and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. None of it is compiled into Release builds.
 
 ## Licence
 

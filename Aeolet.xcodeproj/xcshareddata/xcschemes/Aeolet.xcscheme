@@ -12,6 +12,9 @@
          <TestableReference skipped = "NO">
             <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "0000000000000000000000A4" BuildableName = "AeoletTests.xctest" BlueprintName = "AeoletTests" ReferencedContainer = "container:Aeolet.xcodeproj"></BuildableReference>
          </TestableReference>
+         <TestableReference skipped = "NO">
+            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "0000000000000000000000B2" BuildableName = "AeoletUITests.xctest" BlueprintName = "AeoletUITests" ReferencedContainer = "container:Aeolet.xcodeproj"></BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle = "0" useCustomWorkingDirectory = "NO" ignoresPersistentStateOnLaunch = "NO" debugDocumentVersioning = "YES" debugServiceExtension = "internal" allowLocationSimulation = "YES">

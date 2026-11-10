@@ -4,12 +4,19 @@ struct RootView: View {
     @EnvironmentObject private var app: AppModel
     @Environment(\.scenePhase) private var scenePhase
 
+    private var isCovered: Bool { app.isLocked || (app.requireDeviceAuth && scenePhase != .active) }
+
     var body: some View {
         ZStack {
             content
-            if app.isLocked || (app.requireDeviceAuth && scenePhase != .active) {
-                LockView()
-            }
+            #if DEBUG
+            if MockGmail.isActive { MockGmailProbe() }
+            #endif
+        }
+        // The lock screen gets its own window above everything, so it also covers open sheets
+        // (a draft in Compose, Settings, PGP keys), and the windows behind it are hidden from VoiceOver.
+        .onChange(of: isCovered, initial: true) { _, covered in
+            LockOverlay.shared.update(covered: covered, app: app)
         }
         .alert("Aeolet", isPresented: Binding(
             get: { app.errorMessage != nil },
@@ -46,6 +53,33 @@ struct LockView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
+        .tint(Theme.aegean)
+    }
+}
+
+/// Shows LockView in a window above every other window of the scene, including presented sheets.
+@MainActor
+final class LockOverlay {
+    static let shared = LockOverlay()
+    private var window: UIWindow?
+
+    func update(covered: Bool, app: AppModel) {
+        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
+        if covered, window == nil {
+            let overlay = UIWindow(windowScene: scene)
+            overlay.windowLevel = .alert + 1
+            let host = UIHostingController(rootView: LockView().environmentObject(app))
+            host.view.accessibilityViewIsModal = true
+            overlay.rootViewController = host
+            overlay.isHidden = false
+            window = overlay
+        } else if !covered, let overlay = window {
+            overlay.isHidden = true
+            window = nil
+        }
+        for other in scene.windows where other !== window {
+            other.accessibilityElementsHidden = covered
+        }
     }
 }
 

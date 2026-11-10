@@ -13,7 +13,11 @@ enum PGPError: LocalizedError {
         switch self {
         case .unavailable: return "The encryption engine could not start on this device."
         case let .operation(message):
-            if message.lowercased().contains("passphrase") || message.lowercased().contains("session key") {
+            let lowered = message.lowercased()
+            if lowered.contains("no decryption key packets") {
+                return "This message was encrypted to a different key, so it can't be decrypted with yours."
+            }
+            if lowered.contains("passphrase") || lowered.contains("session key") {
                 return "Wrong passphrase, or this message was not encrypted to your key."
             }
             return message

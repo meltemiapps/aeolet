@@ -27,7 +27,7 @@ enum KeychainStore {
         }
     }
 
-    private static let service = "com.meltemiapps.aeolet.credentials"
+    static let service = "com.meltemiapps.aeolet.credentials"
 
     private static func baseQuery(_ key: String) -> [String: Any] {
         [

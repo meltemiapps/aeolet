@@ -3,13 +3,20 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
-		0000000000000000000000E7 = {
+		0000000000000000000000B7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 0000000000000000000000A0;
+			containerPortal = 0000000000000000000000A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0000000000000000000000A3;
+			remoteInfo = Aeolet;
+		};
+		0000000000000000000000E7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0000000000000000000000A0 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 0000000000000000000000A3;
 			remoteInfo = Aeolet;
@@ -17,39 +24,62 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0000000000000000000000A5 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aeolet.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0000000000000000000000A6 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AeoletTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		0000000000000000000000A9 = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
-		0000000000000000000000AA = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Support/Info.plist; sourceTree = "<group>"; };
+		0000000000000000000000A5 /* Aeolet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aeolet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0000000000000000000000A6 /* AeoletTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AeoletTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0000000000000000000000A9 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		0000000000000000000000AA /* Support/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Support/Info.plist; sourceTree = "<group>"; };
+		0000000000000000000000B0 /* AeoletUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AeoletUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0000000000000000000000A7 = {isa = PBXFileSystemSynchronizedRootGroup; path = Aeolet; sourceTree = "<group>"; };
-		0000000000000000000000A8 = {isa = PBXFileSystemSynchronizedRootGroup; path = AeoletTests; sourceTree = "<group>"; };
+		0000000000000000000000A7 /* Aeolet */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Aeolet; sourceTree = "<group>"; };
+		0000000000000000000000A8 /* AeoletTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletTests; sourceTree = "<group>"; };
+		0000000000000000000000B1 /* AeoletUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		0000000000000000000000E1 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		0000000000000000000000E4 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		0000000000000000000000B4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0000000000000000000000E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0000000000000000000000E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0000000000000000000000A1 = {
 			isa = PBXGroup;
 			children = (
-				0000000000000000000000A9,
-				0000000000000000000000AA,
-				0000000000000000000000A7,
-				0000000000000000000000A8,
-				0000000000000000000000A2,
+				0000000000000000000000A9 /* Config.xcconfig */,
+				0000000000000000000000AA /* Support/Info.plist */,
+				0000000000000000000000A7 /* Aeolet */,
+				0000000000000000000000A8 /* AeoletTests */,
+				0000000000000000000000B1 /* AeoletUITests */,
+				0000000000000000000000A2 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		0000000000000000000000A2 = {
+		0000000000000000000000A2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0000000000000000000000A5,
-				0000000000000000000000A6,
+				0000000000000000000000A5 /* Aeolet.app */,
+				0000000000000000000000A6 /* AeoletTests.xctest */,
+				0000000000000000000000B0 /* AeoletUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -57,58 +87,79 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0000000000000000000000A3 = {
+		0000000000000000000000A3 /* Aeolet */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0000000000000000000000D1;
+			buildConfigurationList = 0000000000000000000000D1 /* Build configuration list for PBXNativeTarget "Aeolet" */;
 			buildPhases = (
-				0000000000000000000000E0,
-				0000000000000000000000E1,
-				0000000000000000000000E2,
+				0000000000000000000000E0 /* Sources */,
+				0000000000000000000000E1 /* Frameworks */,
+				0000000000000000000000E2 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0000000000000000000000A7,
+				0000000000000000000000A7 /* Aeolet */,
 			);
 			name = Aeolet;
 			productName = Aeolet;
-			productReference = 0000000000000000000000A5;
+			productReference = 0000000000000000000000A5 /* Aeolet.app */;
 			productType = "com.apple.product-type.application";
 		};
-		0000000000000000000000A4 = {
+		0000000000000000000000A4 /* AeoletTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0000000000000000000000D2;
+			buildConfigurationList = 0000000000000000000000D2 /* Build configuration list for PBXNativeTarget "AeoletTests" */;
 			buildPhases = (
-				0000000000000000000000E3,
-				0000000000000000000000E4,
-				0000000000000000000000E5,
+				0000000000000000000000E3 /* Sources */,
+				0000000000000000000000E4 /* Frameworks */,
+				0000000000000000000000E5 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				0000000000000000000000E6,
+				0000000000000000000000E6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				0000000000000000000000A8,
+				0000000000000000000000A8 /* AeoletTests */,
 			);
 			name = AeoletTests;
 			productName = AeoletTests;
-			productReference = 0000000000000000000000A6;
+			productReference = 0000000000000000000000A6 /* AeoletTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		0000000000000000000000B2 /* AeoletUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0000000000000000000000BA /* Build configuration list for PBXNativeTarget "AeoletUITests" */;
+			buildPhases = (
+				0000000000000000000000B3 /* Sources */,
+				0000000000000000000000B4 /* Frameworks */,
+				0000000000000000000000B5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0000000000000000000000B6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0000000000000000000000B1 /* AeoletUITests */,
+			);
+			name = AeoletUITests;
+			productName = AeoletUITests;
+			productReference = 0000000000000000000000B0 /* AeoletUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		0000000000000000000000A0 = {
+		0000000000000000000000A0 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 			};
-			buildConfigurationList = 0000000000000000000000D0;
+			buildConfigurationList = 0000000000000000000000D0 /* Build configuration list for PBXProject "Aeolet" */;
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -117,103 +168,179 @@
 				Base,
 			);
 			mainGroup = 0000000000000000000000A1;
-			preferredProjectObjectVersion = 77;
-			productRefGroup = 0000000000000000000000A2;
+			productRefGroup = 0000000000000000000000A2 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0000000000000000000000A3,
-				0000000000000000000000A4,
+				0000000000000000000000A3 /* Aeolet */,
+				0000000000000000000000A4 /* AeoletTests */,
+				0000000000000000000000B2 /* AeoletUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		0000000000000000000000E2 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		0000000000000000000000E5 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		0000000000000000000000B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0000000000000000000000E2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0000000000000000000000E5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		0000000000000000000000E0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		0000000000000000000000E3 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		0000000000000000000000B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0000000000000000000000E0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0000000000000000000000E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		0000000000000000000000E6 = {isa = PBXTargetDependency; target = 0000000000000000000000A3; targetProxy = 0000000000000000000000E7; };
+		0000000000000000000000B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0000000000000000000000A3 /* Aeolet */;
+			targetProxy = 0000000000000000000000B7 /* PBXContainerItemProxy */;
+		};
+		0000000000000000000000E6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0000000000000000000000A3 /* Aeolet */;
+			targetProxy = 0000000000000000000000E7 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		0000000000000000000000C2 = {
+		0000000000000000000000B8 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0000000000000000000000A9;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_TESTABILITY = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ONLY_ACTIVE_ARCH = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Aeolet;
 			};
 			name = Debug;
 		};
-		0000000000000000000000C3 = {
+		0000000000000000000000B9 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0000000000000000000000A9;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Aeolet;
+			};
+			name = Release;
+		};
+		0000000000000000000000C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0000000000000000000000A9 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0000000000000000000000C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0000000000000000000000A9 /* Config.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
-		0000000000000000000000C4 = {
+		0000000000000000000000C4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Support/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 			};
 			name = Debug;
 		};
-		0000000000000000000000C5 = {
+		0000000000000000000000C5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				EXCLUDED_SOURCE_FILE_NAMES = "MockGmail*.swift";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Support/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 			};
 			name = Release;
 		};
-		0000000000000000000000C6 = {
+		0000000000000000000000C6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -225,7 +352,7 @@
 			};
 			name = Debug;
 		};
-		0000000000000000000000C7 = {
+		0000000000000000000000C7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -240,34 +367,43 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0000000000000000000000D0 = {
+		0000000000000000000000BA /* Build configuration list for PBXNativeTarget "AeoletUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0000000000000000000000C2,
-				0000000000000000000000C3,
+				0000000000000000000000B8 /* Debug */,
+				0000000000000000000000B9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0000000000000000000000D1 = {
+		0000000000000000000000D0 /* Build configuration list for PBXProject "Aeolet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0000000000000000000000C4,
-				0000000000000000000000C5,
+				0000000000000000000000C2 /* Debug */,
+				0000000000000000000000C3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0000000000000000000000D2 = {
+		0000000000000000000000D1 /* Build configuration list for PBXNativeTarget "Aeolet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0000000000000000000000C6,
-				0000000000000000000000C7,
+				0000000000000000000000C4 /* Debug */,
+				0000000000000000000000C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0000000000000000000000D2 /* Build configuration list for PBXNativeTarget "AeoletTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0000000000000000000000C6 /* Debug */,
+				0000000000000000000000C7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 0000000000000000000000A0;
+	rootObject = 0000000000000000000000A0 /* Project object */;
 }

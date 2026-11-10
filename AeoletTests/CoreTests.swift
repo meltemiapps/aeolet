@@ -70,4 +70,32 @@ final class CoreTests: XCTestCase {
             XCTAssertEqual(error.localizedDescription, "Gmail returned an incomplete response (missing emailAddress).")
         }
     }
+
+    func testRemoteContentIsBlockedUnlessAllowed() {
+        let blocked = MessageWebView.document(from: "<img src=\"https://tracker.example/x.gif\">", allowRemote: false)
+        XCTAssertTrue(blocked.contains("img-src data:;"), "Only inline images may load by default")
+        XCTAssertFalse(blocked.contains("img-src data: https:"))
+        XCTAssertTrue(blocked.contains("default-src 'none'"))
+        let allowed = MessageWebView.document(from: "", allowRemote: true)
+        XCTAssertTrue(allowed.contains("img-src data: https:"))
+    }
+
+    func testCacheFilesAreGroupedPerAccount() {
+        let elena = MailCache.prefix(account: "Elena@Example.com")
+        XCTAssertEqual(elena, MailCache.prefix(account: "elena@example.com"), "Prefix must ignore case")
+        XCTAssertNotEqual(elena, MailCache.prefix(account: "nikos@example.com"))
+        MailCache.save([], account: "elena@example.com", label: "INBOX")
+        MailCache.save([], account: "nikos@example.com", label: "INBOX")
+        MailCache.deleteAll(account: "nikos@example.com")
+        XCTAssertTrue(PrivateFile.names().contains { $0.hasPrefix(elena) })
+        XCTAssertFalse(PrivateFile.names().contains { $0.hasPrefix(MailCache.prefix(account: "nikos@example.com")) })
+        MailCache.deleteAll(account: "elena@example.com")
+    }
+
+    func testDecodingErrorsNameNestedFields() {
+        let body = Data(#"{"threads":[{"snippet":"no id"}]}"#.utf8)
+        XCTAssertThrowsError(try GmailClient.decode(GmailThreadList.self, from: body)) { error in
+            XCTAssertEqual(error.localizedDescription, "Gmail returned an incomplete response (missing threads[0].id).")
+        }
+    }
 }

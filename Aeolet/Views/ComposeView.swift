@@ -34,9 +34,10 @@ struct ComposeView: View {
                         Label(item.filename, systemImage: "paperclip")
                     }
                     .onDelete { model.attachments.remove(atOffsets: $0) }
-                    Button("Attach file", systemImage: "paperclip") { showImporter = true }
+                    Button("Attach file", systemImage: "paperclip") { attachFile() }
                 }
             }
+            .scrollDismissesKeyboard(.immediately)
             .navigationTitle("New message")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -48,6 +49,13 @@ struct ComposeView: View {
                                 Task { if await model.saveDraft() { dismiss() } }
                             }
                         }
+                    }
+                }
+                // The body is multi-line, so Return can't put the keyboard away.
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Hide keyboard", systemImage: "keyboard.chevron.compact.down") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -104,6 +112,17 @@ struct ComposeView: View {
                 }
             }
         }
+    }
+
+    private func attachFile() {
+        #if DEBUG
+        // Mock runs attach a fixture instead of opening the system document picker.
+        if MockGmail.isActive {
+            model.attachments.append(MockGmail.sampleAttachment)
+            return
+        }
+        #endif
+        showImporter = true
     }
 
     private func sendNow() {

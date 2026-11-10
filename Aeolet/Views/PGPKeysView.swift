@@ -150,9 +150,13 @@ struct GenerateKeyView: View {
                     LabeledContent("Email", value: account)
                     TextField("Your name", text: $name)
                 }
+                // Kept out of password AutoFill: iOS would otherwise offer a generated "strong password"
+                // that the person never sees or remembers, and a PGP passphrase has no reset.
                 Section {
                     SecureField("Passphrase, 12 characters or more", text: $passphrase)
+                        .textContentType(.oneTimeCode)
                     SecureField("Repeat passphrase", text: $confirmation)
+                        .textContentType(.oneTimeCode)
                 } footer: {
                     Text("There is no reset. If you forget it, mail encrypted to this key is unreadable.")
                 }

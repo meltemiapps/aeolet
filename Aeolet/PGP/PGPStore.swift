@@ -143,7 +143,7 @@ final class PGPStore: ObservableObject {
         guard let url = URL(string: "https://keys.openpgp.org/vks/v1/by-email/\(address.formEncoded)") else {
             throw PGPError.operation("That email address is not valid.")
         }
-        let (data, response) = try await URLSession(configuration: .ephemeral).data(from: url)
+        let (data, response) = try await Network.ephemeral.data(from: url)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw PGPError.operation("No published key found for \(address).")
         }

@@ -6,6 +6,11 @@ import UserNotifications
 enum BackgroundSync {
     private static func historyKey(_ account: String) -> String { "history.\(account.lowercased())" }
 
+    /// Drops the account's new-mail bookmark when it signs out.
+    static func forget(account: String) {
+        UserDefaults.standard.removeObject(forKey: historyKey(account))
+    }
+
     static func schedule() {
         let request = BGAppRefreshTaskRequest(identifier: AppConfig.backgroundTaskID)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
@@ -13,6 +18,9 @@ enum BackgroundSync {
     }
 
     static func requestNotificationPermission() async {
+        #if DEBUG
+        if MockGmail.isActive { return }
+        #endif
         _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
     }
 

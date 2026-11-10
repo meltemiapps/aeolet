@@ -119,4 +119,14 @@ enum PrivateFile {
     static func deleteAll() {
         try? FileManager.default.removeItem(at: directory)
     }
+
+    static func names() -> [String] {
+        (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+    }
+
+    static func delete(prefix: String) {
+        for name in names() where name.hasPrefix(prefix) {
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent(name))
+        }
+    }
 }

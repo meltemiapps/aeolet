@@ -44,6 +44,8 @@ struct ThreadDetailView: View {
                 Button { Task { await act { try await model.trash() } } } label: { Image(systemName: "trash") }
                     .accessibilityLabel("Bin")
                 Spacer()
+                labelMenu
+                Spacer()
                 Button {
                     if let last = model.messages.last { compose = ComposeContext(mode: .reply, source: last) }
                 } label: { Image(systemName: "arrowshape.turn.up.left") }
@@ -57,17 +59,17 @@ struct ThreadDetailView: View {
         .sheet(item: $compose) { context in
             ComposeView(account: account, context: context)
         }
-        .alert("Key passphrase", isPresented: Binding(
-            get: { model.passphraseTarget != nil },
-            set: { if !$0 { model.passphraseTarget = nil } }
-        )) {
+        .alert("Key passphrase", isPresented: $model.isAskingPassphrase) {
             SecureField("Passphrase", text: $passphrase)
             Button("Decrypt") {
                 let value = passphrase
                 passphrase = ""
                 Task { await model.submitPassphrase(value) }
             }
-            Button("Cancel", role: .cancel) { passphrase = "" }
+            Button("Cancel", role: .cancel) {
+                passphrase = ""
+                model.cancelPassphrase()
+            }
         } message: {
             Text("Held in memory until Aeolet leaves the foreground.")
         }
@@ -80,6 +82,25 @@ struct ThreadDetailView: View {
         } message: {
             Text(pendingLink?.absoluteString ?? "")
         }
+    }
+
+    private var labelMenu: some View {
+        Menu {
+            let userLabels = mailbox.labels.filter { $0.type == "user" }
+            if userLabels.isEmpty { Text("No labels yet") }
+            ForEach(userLabels) { label in
+                Button { Task { await model.toggleLabel(label.id) } } label: {
+                    if model.labelIDs.contains(label.id) {
+                        Label(label.displayName, systemImage: "checkmark")
+                    } else {
+                        Text(label.displayName)
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "tag")
+        }
+        .accessibilityLabel("Labels")
     }
 
     private func act(_ action: () async throws -> Void) async {

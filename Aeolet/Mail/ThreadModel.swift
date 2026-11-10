@@ -59,7 +59,12 @@ final class ThreadModel: ObservableObject {
     @Published var messages: [ThreadMessage] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var passphraseTarget: String?
+    /// The message waiting for a passphrase. Kept apart from the prompt's visibility, because SwiftUI
+    /// dismisses an alert (and resets its binding) before the button's work has run.
+    private(set) var passphraseTarget: String?
+    @Published var isAskingPassphrase = false
+    /// Labels on any message in the thread, as Gmail reports them.
+    @Published private(set) var labelIDs: Set<String> = []
 
     init(account: String, threadID: String) {
         self.account = account
@@ -95,6 +100,7 @@ final class ThreadModel: ObservableObject {
             if let lastIndex = built.indices.last { built[lastIndex].isExpanded = true }
             for index in built.indices where source[index].labelIds?.contains("UNREAD") == true { built[index].isExpanded = true }
             messages = built
+            labelIDs = Set(source.flatMap { $0.labelIds ?? [] })
             if source.contains(where: { $0.labelIds?.contains("UNREAD") == true }) {
                 try? await client.modifyThread(threadID, remove: ["UNREAD"])
             }
@@ -152,7 +158,12 @@ final class ThreadModel: ObservableObject {
             await decrypt(id)
         } else {
             passphraseTarget = id
+            isAskingPassphrase = true
         }
+    }
+
+    func cancelPassphrase() {
+        passphraseTarget = nil
     }
 
     func submitPassphrase(_ passphrase: String) async {
@@ -258,5 +269,16 @@ final class ThreadModel: ObservableObject {
     }
 
     func archive() async throws { try await client.modifyThread(threadID, remove: ["INBOX"]) }
+
+    /// Adds the label to every message in the thread, or removes it if the thread already has it.
+    func toggleLabel(_ id: String) async {
+        let adding = !labelIDs.contains(id)
+        do {
+            try await client.modifyThread(threadID, add: adding ? [id] : [], remove: adding ? [] : [id])
+            if adding { labelIDs.insert(id) } else { labelIDs.remove(id) }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
     func trash() async throws { try await client.trashThread(threadID) }
 }

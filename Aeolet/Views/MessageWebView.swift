@@ -12,7 +12,7 @@ struct MessageWebView: UIViewRepresentable {
     [{"trigger":{"url-filter":"^https?://.*"},"action":{"type":"block"}}]
     """
 
-    private static func document(from body: String, allowRemote: Bool) -> String {
+    static func document(from body: String, allowRemote: Bool) -> String {
         let images = allowRemote ? "data: https:" : "data:"
         let policy = "default-src 'none'; img-src \(images); style-src 'unsafe-inline'; font-src data:"
         return """

@@ -6,6 +6,12 @@ struct AeoletApp: App {
     @StateObject private var pgp = PGPStore.shared
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        #if DEBUG
+        MockGmail.prepareLaunch()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
