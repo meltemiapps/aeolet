@@ -1,0 +1,24 @@
+name: Build and test
+on: [push, pull_request]
+jobs:
+  pgp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: sudo apt-get install -y gnupg
+      - working-directory: PGP/js
+        run: |
+          npm ci
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+          npm test
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find a simulator and test
+        run: |
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k in sorted(d, reverse=True) if 'iOS' in k for x in d[k] if 'iPhone' in x['name']))")
+          xcodebuild test -project Aeolet.xcodeproj -scheme Aeolet -destination "id=$DEVICE" CODE_SIGNING_ALLOWED=NO GOOGLE_CLIENT_PREFIX=ci-placeholder

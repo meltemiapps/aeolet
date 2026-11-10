@@ -1,0 +1,13 @@
+{
+  "name": "aeolet-pgp-bridge",
+  "private": true,
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "description": "Bundles OpenPGP.js and the Aeolet bridge into one file for JavaScriptCore.",
+  "scripts": {
+    "build": "esbuild src/entry.js --bundle --format=iife --target=es2020 --platform=neutral --main-fields=browser,module,main --conditions=browser --minify --legal-comments=eof --outfile=../../Aeolet/Resources/openpgp-bridge.js",
+    "test": "npm run build && node test/run.mjs"
+  },
+  "dependencies": { "openpgp": "6.3.2" },
+  "devDependencies": { "esbuild": "0.25.10" }
+}

@@ -1,0 +1,9 @@
+Aeolet
+Copyright 2026 Meltemi Apps
+
+Licensed under the Apache License, Version 2.0.
+
+This product bundles OpenPGP.js (https://github.com/openpgpjs/openpgpjs),
+licensed under the GNU Lesser General Public License v3.0 or later.
+The bundled file Aeolet/Resources/openpgp-bridge.js is built from PGP/js and
+can be replaced by rebuilding from that source.
