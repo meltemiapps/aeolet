@@ -12,5 +12,5 @@ MARKETING_VERSION = 0.1.0
 CURRENT_PROJECT_VERSION = 1
 
 // Shown under Settings > About once set. Keep the $() so the slashes are not read as a comment.
-PUBLISHER_URL = https:/$()/REPLACE_ME
-SOURCE_CODE_URL = https:/$()/REPLACE_ME
+PUBLISHER_URL = https:/$()/meltemiapps.co.uk/aeolet/
+SOURCE_CODE_URL = https:/$()/github.com/meltemiapps/aeolet
