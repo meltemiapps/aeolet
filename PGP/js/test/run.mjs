@@ -88,7 +88,30 @@ assert.equal((await call("verifyDetached", { data: b64(entity), signature: sig.s
 
 // GnuPG interoperability
 const home = mkdtempSync(join(tmpdir(), "aeoletgpg-"));
-const gpg = (args, input) => execFileSync("gpg", ["--homedir", home, "--batch", "--yes", "--pinentry-mode", "loopback", "--trust-model", "always", ...args], { input, stdio: ["pipe", "pipe", "pipe"] });
+// Newer GnuPG releases need loopback pinentry allowed explicitly, and read passphrases from a file reliably.
+writeFileSync(join(home, "gpg-agent.conf"), "allow-loopback-pinentry\n");
+const passFiles = new Map();
+const passFile = (value) => {
+  if (!passFiles.has(value)) {
+    const file = join(home, `pass-${passFiles.size}`);
+    writeFileSync(file, value, { mode: 0o600 });
+    passFiles.set(value, file);
+  }
+  return passFiles.get(value);
+};
+const gpg = (args, input) => {
+  const expanded = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--passphrase") { expanded.push("--passphrase-file", passFile(args[++i])); continue; }
+    expanded.push(args[i]);
+  }
+  try {
+    return execFileSync("gpg", ["--homedir", home, "--batch", "--yes", "--pinentry-mode", "loopback", "--trust-model", "always", ...expanded], { input, stdio: ["pipe", "pipe", "pipe"] });
+  } catch (error) {
+    throw new Error(`gpg ${expanded.join(" ")} failed:\n${error.stderr}`);
+  }
+};
+console.log("# " + execFileSync("gpg", ["--version"]).toString().split("\n")[0]);
 gpg(["--import"], bob.privateKey); gpg(["--import"], alice.publicKey);
 let out = gpg(["--passphrase", "bob pass", "--decrypt"], enc.armored);
 assert.equal(out.toString(), plain); ok("GnuPG decrypts and accepts Aeolet output");
