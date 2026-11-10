@@ -229,6 +229,12 @@ private struct MessageCard: View {
     }
 
     private func open(_ item: MailAttachment) async {
+        // Quick Look needs a file on disk. Decrypted content must never be written to disk,
+        // so attachments of encrypted messages are not previewed.
+        guard !message.wasEncrypted else {
+            attachmentError = "Attachments of encrypted messages can't be previewed, because previewing would write the decrypted file to storage."
+            return
+        }
         do {
             let data = try await model.attachmentData(item)
             let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
