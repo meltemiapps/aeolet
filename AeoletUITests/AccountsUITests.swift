@@ -26,8 +26,13 @@ final class AccountsUITests: AeoletUITestCase {
         app.buttons[Self.nikos].tap()
         app.buttons["Sign out"].tap()
         waitForLog("REVOKE token=mock-refresh-\(Self.nikos)", after: start)
-        // Signing out the account on screen switches to the remaining one, which closes Settings.
-        if app.navigationBars["Settings"].exists { app.buttons["Done"].tap() }
+        // Signing out the account on screen switches to the remaining one, which closes Settings by itself.
+        // Give that a moment, and only close Settings if it is still there.
+        let settings = app.navigationBars["Settings"]
+        let deadline = Date().addingTimeInterval(5)
+        while settings.exists && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.25)) }
+        let done = settings.buttons["Done"]
+        if done.exists && done.isHittable { done.tap() }
 
         waitUntil(10, "Nikos's credentials and cache to be removed") {
             !keychain.contains("oauth.refresh.\(Self.nikos)") && cacheFiles[Self.nikos] == 0
