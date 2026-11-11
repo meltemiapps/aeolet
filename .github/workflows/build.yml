@@ -21,6 +21,9 @@ jobs:
       - name: Unit and UI tests (UI tests run against the in-app mock Gmail server)
         run: |
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k in sorted(d, reverse=True) if 'iOS' in k for x in d[k] if 'iPhone' in x['name']))")
+          # Boot first and wait until fully up: a cold boot inside the test run can time out UI test start-up.
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
           xcodebuild test -project Aeolet.xcodeproj -scheme Aeolet -destination "id=$DEVICE" \
             -resultBundlePath TestResults.xcresult -retry-tests-on-failure -test-iterations 2 \
             GOOGLE_CLIENT_PREFIX=ci-placeholder
