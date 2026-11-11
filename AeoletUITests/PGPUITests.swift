@@ -47,6 +47,7 @@ final class PGPUITests: AeoletUITestCase {
         type(Self.nikos, into: app.textFields["To"])
         type("Lighthouse", into: app.textFields["Subject"])
         type("Meet at the lighthouse at nine.", into: app.textViews.firstMatch)
+        hideKeyboard()
         let encrypt = app.switches["Encrypt"]
         XCTAssertTrue(encrypt.waitForExistence(timeout: 10), "Encrypt option missing")
         setSwitch("Encrypt", on: true)

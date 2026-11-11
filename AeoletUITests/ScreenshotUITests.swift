@@ -24,8 +24,8 @@ final class ScreenshotUITests: AeoletUITestCase {
         waitUntil(5, "the keyboard to go away") { app.keyboards.count == 0 }
         RunLoop.current.run(until: Date().addingTimeInterval(1))
         save(app.screenshot(), as: "3-Compose")
-        app.buttons["Close"].tap()
-        app.buttons["Discard"].tap()
+        tapByPosition(app.buttons["Close"])
+        tapByPosition(app.buttons["Discard"])
 
         openSettings()
         RunLoop.current.run(until: Date().addingTimeInterval(1))

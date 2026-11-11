@@ -241,11 +241,25 @@ class AeoletUITestCase: XCTestCase {
     func setSwitch(_ label: String, on: Bool, file: StaticString = #filePath, line: UInt = #line) {
         let toggle = app.switches[label]
         XCTAssertTrue(toggle.waitForExistence(timeout: 10), "No switch \(label)", file: file, line: line)
+        for _ in 0..<3 where !toggle.isHittable { app.swipeUp(velocity: .slow) }
         for _ in 0..<3 where (toggle.value as? String == "1") != on {
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         }
         XCTAssertEqual(toggle.value as? String, on ? "1" : "0", "\(label) did not turn \(on ? "on" : "off")", file: file, line: line)
+    }
+
+    /// Puts the keyboard away with Compose's own button, so controls further down the form are reachable.
+    func hideKeyboard() {
+        let hide = app.buttons["Hide keyboard"].firstMatch
+        if hide.exists && hide.isHittable { hide.tap() }
+        waitUntil(5, "the keyboard to go away") { app.keyboards.count == 0 }
+    }
+
+    /// Taps by position: on older iOS, menus such as Compose's Close can't be reached through accessibility.
+    func tapByPosition(_ element: XCUIElement) {
+        XCTAssertTrue(element.waitForExistence(timeout: 10))
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
     func type(_ text: String, into element: XCUIElement) {
