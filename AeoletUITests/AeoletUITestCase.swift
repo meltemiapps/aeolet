@@ -68,6 +68,8 @@ class AeoletUITestCase: XCTestCase {
     /// Number of the latest request, for "anything after this point" checks.
     var logPosition: Int { probe["seq"] as? Int ?? 0 }
 
+    static func number(ofLogLine line: String) -> Int { number(of: line) }
+
     private static func number(of line: String) -> Int {
         Int(line.dropFirst().prefix { $0.isNumber }) ?? 0
     }
@@ -287,6 +289,8 @@ class AeoletUITestCase: XCTestCase {
             field.tap()
             _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
             RunLoop.current.run(until: Date().addingTimeInterval(1.0))
+            // On iPad the tap can land while the sheet is still settling; typing then fails outright.
+            guard hasFocus(field) else { continue }
             field.typeText(text)
             // Long values are reported truncated, as "••••…" or "••••...".
             shown = field.value as? String ?? ""

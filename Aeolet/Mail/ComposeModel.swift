@@ -95,13 +95,29 @@ final class ComposeModel: ObservableObject {
         }
     }
 
+    /// Display names from Gmail's sendAs settings, fetched once per account per launch.
+    private static var senderNames: [String: String] = [:]
+
+    /// The account's display name. If Gmail can't be asked (offline, say), the mail goes out with the bare address.
+    private func senderName() async -> String? {
+        if let cached = Self.senderNames[account] { return cached.isEmpty ? nil : cached }
+        do {
+            let name = try await client.senderDisplayName()
+            Self.senderNames[account] = name ?? ""
+            return name
+        } catch {
+            return nil
+        }
+    }
+
     private var isReply: Bool { context.mode == .reply || context.mode == .replyAll }
 
     private func buildMessage(passphrase: String?) async throws -> Data {
         let content = MIMEBuilder.contentEntity(text: body, attachments: attachments)
         let entity = try await pgp.protect(entity: content, account: account, recipients: recipients,
                                            encrypt: encrypt, sign: sign, passphrase: passphrase)
-        var headers = OutgoingHeaders(from: account, to: to.splitAddresses, cc: cc.splitAddresses, bcc: bcc.splitAddresses, subject: subject)
+        let from = OutgoingHeaders.sender(account: account, displayName: await senderName())
+        var headers = OutgoingHeaders(from: from, to: to.splitAddresses, cc: cc.splitAddresses, bcc: bcc.splitAddresses, subject: subject)
         if isReply, let source = context.source, !source.messageIDHeader.isEmpty {
             headers.inReplyTo = source.messageIDHeader
             headers.references = [source.references, source.messageIDHeader].filter { !$0.isEmpty }.joined(separator: " ")

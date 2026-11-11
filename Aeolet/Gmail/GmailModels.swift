@@ -47,6 +47,18 @@ struct GmailThread: Codable {
     let messages: [GmailMessage]?
 }
 
+/// One entry of users.settings.sendAs.list.
+struct GmailSendAs: Codable {
+    let sendAsEmail: String
+    let displayName: String?
+    let isPrimary: Bool?
+    let isDefault: Bool?
+}
+
+struct GmailSendAsList: Codable {
+    let sendAs: [GmailSendAs]?
+}
+
 struct GmailThreadList: Codable {
     let threads: [GmailThread]?
     let nextPageToken: String?

@@ -45,8 +45,8 @@ enum MockGmailFixtures {
     }
 
     static func mailboxes(server: MockGmailServer) -> [MockGmailServer.Mailbox] {
-        let elenaBox = MockGmailServer.Mailbox(address: elena, labels: systemLabels + userLabels)
-        let nikosBox = MockGmailServer.Mailbox(address: nikos, labels: systemLabels + userLabels)
+        let elenaBox = MockGmailServer.Mailbox(address: elena, displayName: "Elena Marinou", labels: systemLabels + userLabels)
+        let nikosBox = MockGmailServer.Mailbox(address: nikos, displayName: "Nikos Andreou", labels: systemLabels + userLabels)
         load(elenaThreads(), into: elenaBox, server: server)
         load(nikosThreads(), into: nikosBox, server: server)
         return [elenaBox, nikosBox]

@@ -22,7 +22,10 @@ final class ComposeUITests: AeoletUITestCase {
         let start = logPosition
         send()
 
-        let sent = waitForLog("SEND from=\(Self.elena)", after: start)
+        let sent = waitForLog("SEND account=\(Self.elena)", after: start)
+        // The From line carries the display name from Gmail's sendAs settings.
+        XCTAssertTrue(sent.contains("from=Elena Marinou <elena@example.com> |"), sent)
+        waitForLog("GET /settings/sendAs account=\(Self.elena)")
         XCTAssertTrue(sent.contains("to=sofia@example.org |"), sent)
         XCTAssertTrue(sent.contains("cc= |"), sent)
         XCTAssertTrue(sent.contains("subject=Weekend plans |"), sent)
@@ -45,8 +48,8 @@ final class ComposeUITests: AeoletUITestCase {
         type("Sounds perfect, see you there. ", into: app.textViews.firstMatch)
         var start = logPosition
         send()
-        let reply = waitForLog("SEND from=\(Self.elena)", "subject=Re: Dinner on Friday?", after: start)
-        XCTAssertTrue(reply.contains("to=\"Nikos Andreou\" <nikos@example.com> |"), reply)
+        let reply = waitForLog("SEND account=\(Self.elena)", "subject=Re: Dinner on Friday?", after: start)
+        XCTAssertTrue(reply.contains("to=Nikos Andreou <nikos@example.com> |"), reply)
         XCTAssertTrue(reply.contains("cc= |"), reply)
         XCTAssertFalse(reply.contains("inReplyTo= |"), "Reply must carry In-Reply-To: \(reply)")
         XCTAssertFalse(reply.contains("threadId= |"), "Reply must stay in the thread: \(reply)")
@@ -61,7 +64,7 @@ final class ComposeUITests: AeoletUITestCase {
         XCTAssertFalse(ccValue.contains(Self.elena), "Reply all must not copy me: \(ccValue)")
         start = logPosition
         send()
-        let replyAll = waitForLog("SEND from=\(Self.elena)", "subject=Re: Dinner on Friday?", after: start)
+        let replyAll = waitForLog("SEND account=\(Self.elena)", "subject=Re: Dinner on Friday?", after: start)
         XCTAssertTrue(replyAll.contains("nikos@example.com"), replyAll)
         XCTAssertTrue(replyAll.contains("sofia@example.org") && replyAll.contains("maria@example.org"), replyAll)
         XCTAssertFalse(replyAll.contains("inReplyTo= |"), replyAll)
@@ -77,8 +80,11 @@ final class ComposeUITests: AeoletUITestCase {
         type("yannis@example.org", into: field("To"))
         start = logPosition
         send()
-        let forwarded = waitForLog("SEND from=\(Self.elena)", "subject=Fwd: Your ferry tickets", after: start)
+        let forwarded = waitForLog("SEND account=\(Self.elena)", "subject=Fwd: Your ferry tickets", after: start)
         XCTAssertTrue(forwarded.contains("to=yannis@example.org |"), forwarded)
+        XCTAssertTrue(forwarded.contains("from=Elena Marinou <elena@example.com> |"), forwarded)
+        // The name is fetched once per launch, not once per message.
+        XCTAssertFalse(log.contains { Self.number(ofLogLine: $0) > start && $0.contains("GET /settings/sendAs") }, "\(log)")
         XCTAssertTrue(forwarded.contains("attachments=Boarding passes.pdf |"), forwarded)
         XCTAssertTrue(forwarded.contains("inReplyTo= |"), forwarded)
         XCTAssertTrue(forwarded.contains("threadId= |"), forwarded)

@@ -138,6 +138,20 @@ struct GmailClient {
 
     func profile() async throws -> GmailProfile { try await get("/profile") }
 
+    /// The display name Gmail uses for this account's own address, from its "Send mail as" settings.
+    /// Nil when Gmail has none set.
+    func senderDisplayName() async throws -> String? {
+        let list: GmailSendAsList = try await get("/settings/sendAs")
+        return Self.displayName(for: account, in: list.sendAs ?? [])
+    }
+
+    static func displayName(for account: String, in entries: [GmailSendAs]) -> String? {
+        let own = entries.first { $0.sendAsEmail.caseInsensitiveCompare(account) == .orderedSame }
+            ?? entries.first { $0.isPrimary == true }
+        let name = own?.displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? nil : name
+    }
+
     func labels() async throws -> [GmailLabel] {
         struct Response: Decodable { let labels: [GmailLabel]? }
         let listed: Response = try await get("/labels")

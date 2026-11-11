@@ -333,6 +333,12 @@ struct OutgoingAttachment: Identifiable, Hashable {
 }
 
 struct OutgoingHeaders {
+    /// "Name <address>", or just the address when there is no name.
+    static func sender(account: String, displayName: String?) -> String {
+        let name = MIMEBuilder.sanitised(displayName ?? "")
+        return name.isEmpty ? account : "\(name) <\(account)>"
+    }
+
     var from: String
     var to: [String]
     var cc: [String] = []
@@ -375,7 +381,11 @@ enum MIMEBuilder {
         let mailbox = String(clean[open...])
         if name.isEmpty { return mailbox }
         if name.allSatisfy({ $0.isASCII }) {
-            return "\"\(name.replacingOccurrences(of: "\"", with: ""))\" \(mailbox)"
+            // Plain names go as they are; names with RFC 5322 specials, such as "Andreou, Nikos", are quoted.
+            let specials = CharacterSet(charactersIn: "()<>[]:;@\\,.\"")
+            if name.unicodeScalars.allSatisfy({ !specials.contains($0) }) { return "\(name) \(mailbox)" }
+            let escaped = name.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+            return "\"\(escaped)\" \(mailbox)"
         }
         return "\(encodeHeaderWord(name)) \(mailbox)"
     }

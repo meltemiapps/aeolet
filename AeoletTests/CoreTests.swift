@@ -126,4 +126,25 @@ final class CoreTests: XCTestCase {
         XCTAssertNil(cached.contentType)
         XCTAssertEqual(cached.preview, .encrypted)
     }
+
+    func testFromLineUsesTheSendAsDisplayName() {
+        let entries = [
+            GmailSendAs(sendAsEmail: "alias@example.com", displayName: "Alias", isPrimary: false, isDefault: false),
+            GmailSendAs(sendAsEmail: "Nikos@Example.com", displayName: " Nikos Andreou ", isPrimary: true, isDefault: true),
+        ]
+        let name = GmailClient.displayName(for: "nikos@example.com", in: entries)
+        XCTAssertEqual(name, "Nikos Andreou")
+        XCTAssertNil(GmailClient.displayName(for: "a@example.com", in: [GmailSendAs(sendAsEmail: "a@example.com", displayName: "", isPrimary: true, isDefault: true)]))
+
+        func fromLine(_ name: String?) -> String {
+            let headers = OutgoingHeaders(from: OutgoingHeaders.sender(account: "nikos@example.com", displayName: name), to: ["e@example.com"], subject: "Hi")
+            let text = String(decoding: MIMEBuilder.message(headers: headers, entity: Data("\r\nbody".utf8), senderDomain: "example.com"), as: UTF8.self)
+            return text.components(separatedBy: "\r\n").first { $0.hasPrefix("From: ") } ?? ""
+        }
+        XCTAssertEqual(fromLine(name), "From: Nikos Andreou <nikos@example.com>")
+        XCTAssertEqual(fromLine(nil), "From: nikos@example.com")
+        XCTAssertEqual(fromLine("Andreou, Nikos"), "From: \"Andreou, Nikos\" <nikos@example.com>")
+        XCTAssertEqual(fromLine("Νίκος Ανδρέου"), "From: =?UTF-8?B?zp3Or866zr/PgiDOkc69zrTPgc6tzr/PhQ==?= <nikos@example.com>")
+        XCTAssertFalse(fromLine("Nikos\r\nBcc: evil@example.org").contains("\r\nBcc"))
+    }
 }

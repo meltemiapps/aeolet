@@ -86,8 +86,9 @@ final class PGPUITests: AeoletUITestCase {
         var start = logPosition
         app.buttons["Send"].tap()
         enterPassphrase(Self.passphrase, confirm: "Sign and send")
-        let sent = waitForLog("SEND from=\(Self.elena)", "subject=Lighthouse", after: start, timeout: 40)
+        let sent = waitForLog("SEND account=\(Self.elena)", "subject=Lighthouse", after: start, timeout: 40)
         XCTAssertTrue(sent.hasSuffix("pgp=encrypted"), "Message was not PGP/MIME encrypted: \(sent)")
+        XCTAssertTrue(sent.contains("from=Elena Marinou <elena@example.com> |"), sent)
         waitForLog("DELIVER to=\(Self.nikos)", after: start)
 
         // Nikos decrypts it and sees a verified signature.

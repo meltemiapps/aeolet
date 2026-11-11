@@ -124,10 +124,13 @@ final class MockGmailServer: @unchecked Sendable {
 
     final class Mailbox {
         let address: String
+        /// The name Gmail's sendAs settings report for the primary address.
+        let displayName: String
         var messages: [Message] = []
         var labels: [Label]
-        init(address: String, labels: [Label]) {
+        init(address: String, displayName: String, labels: [Label]) {
             self.address = address
+            self.displayName = displayName
             self.labels = labels
         }
     }
@@ -255,6 +258,13 @@ final class MockGmailServer: @unchecked Sendable {
             record("GET /profile account=\(account)")
             return .success(.json(["emailAddress": account, "messagesTotal": mailbox.messages.count,
                                    "threadsTotal": Set(mailbox.messages.map(\.threadID)).count, "historyId": "\(1000 + counter)"]))
+        case ("GET", "settings", 2) where parts[1] == "sendAs":
+            record("GET /settings/sendAs account=\(account)")
+            return .success(.json(["sendAs": [
+                ["sendAsEmail": "\(account.split(separator: "@")[0])+alias@example.com", "displayName": "Alias", "isPrimary": false, "isDefault": false],
+                ["sendAsEmail": account, "displayName": mailbox.displayName, "replyToAddress": "", "signature": "",
+                 "isPrimary": true, "isDefault": true, "treatAsAlias": false],
+            ]]))
         case ("GET", "labels", 1):
             return .success(.json(["labels": mailbox.labels.map { ["id": $0.id, "name": $0.name, "type": $0.type] }]))
         case ("GET", "labels", 2):
@@ -378,7 +388,7 @@ final class MockGmailServer: @unchecked Sendable {
 
         let sent = store(raw: raw, in: mailbox, labels: draft ? ["DRAFT"] : ["SENT"], threadID: requestedThread)
         let summary = Self.summary(of: sent, threadID: requestedThread)
-        record("\(draft ? "DRAFT" : "SEND") from=\(mailbox.address) \(summary)")
+        record("\(draft ? "DRAFT" : "SEND") account=\(mailbox.address) from=\(sent.header("From")) | \(summary)")
 
         if !draft {
             let recipients = (sent.header("To") + "," + sent.header("Cc") + "," + sent.header("Bcc"))
