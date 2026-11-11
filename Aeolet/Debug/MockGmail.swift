@@ -269,7 +269,7 @@ final class MockGmailServer: @unchecked Sendable {
             let format = query["format"]?.first ?? "full"
             if format == "full" { record("GET /threads/\(parts[1]) account=\(account)") }
             return .success(.json(["id": parts[1], "historyId": "\(1000 + counter)", "snippet": snippet(messages.last!),
-                                   "messages": messages.map { json($0, format: format) }]))
+                                   "messages": messages.map { json($0, format: format, headers: query["metadataHeaders"]) }]))
         case ("POST", "threads", 3):
             return .success(modifyThread(mailbox, id: parts[1], action: parts[2], body: body))
         case ("GET", "messages", 2):
@@ -441,7 +441,8 @@ final class MockGmailServer: @unchecked Sendable {
         return String(text.prefix(140))
     }
 
-    private func json(_ message: Message, format: String) -> [String: Any] {
+    /// Like Gmail, format=metadata returns only the headers named in metadataHeaders (all of them when none are named).
+    private func json(_ message: Message, format: String, headers wanted: [String]? = nil) -> [String: Any] {
         var out: [String: Any] = [
             "id": message.id, "threadId": message.threadID, "labelIds": message.labels.sorted(),
             "snippet": snippet(message), "historyId": "\(1000 + counter)",
@@ -450,7 +451,12 @@ final class MockGmailServer: @unchecked Sendable {
         if format == "raw" {
             out["raw"] = Data(message.raw).base64URLEncoded
         } else {
-            out["payload"] = part(message.entity, partID: "", messageID: message.id, headersOnly: format == "metadata")
+            var payload = part(message.entity, partID: "", messageID: message.id, headersOnly: format == "metadata")
+            if format == "metadata", let wanted, !wanted.isEmpty, let all = payload["headers"] as? [[String: String]] {
+                let names = Set(wanted.map { $0.lowercased() })
+                payload["headers"] = all.filter { names.contains($0["name"]?.lowercased() ?? "") }
+            }
+            out["payload"] = payload
         }
         return out
     }

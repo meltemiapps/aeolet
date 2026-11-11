@@ -22,6 +22,7 @@
 	<key>GoogleClientPrefix</key><string>$(GOOGLE_CLIENT_PREFIX)</string>
 	<key>PublisherURL</key><string>$(PUBLISHER_URL)</string>
 	<key>SourceCodeURL</key><string>$(SOURCE_CODE_URL)</string>
+	<key>ITSAppUsesNonExemptEncryption</key><true/>
 	<key>NSFaceIDUsageDescription</key><string>Aeolet can lock your mail behind Face ID.</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array><string>com.meltemiapps.aeolet.refresh</string></array>

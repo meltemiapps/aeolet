@@ -49,7 +49,8 @@ Off by default; enable under Settings. Standard OpenPGP and PGP/MIME (RFC 3156),
 - Subject lines, senders and recipients are not encrypted. That is how OpenPGP email works.
 - Bcc and draft saving are refused while encrypting, because each would leak information.
 - Contact keys are not trusted until you confirm the fingerprint.
-- There is no key recovery. Keep your own backup.
+- There is no key recovery. Keep your own backup: Settings > Keys > Export private key saves the key, still locked with its passphrase, through the share sheet.
+- The inbox shows "Encrypted message" or "Signed message" instead of raw PGP armour.
 
 The cryptography is [OpenPGP.js](https://github.com/openpgpjs/openpgpjs), run in a hidden web view whose content policy blocks all network access. Rebuild and test it from `PGP/js` with `npm ci && npm test`.
 
@@ -67,6 +68,10 @@ xcodebuild test -project Aeolet.xcodeproj -scheme Aeolet -destination "platform=
 ### Mock Gmail
 
 Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install, and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. None of it is compiled into Release builds.
+
+## Security
+
+Please report security problems privately to developer@meltemiapps.co.uk. See [SECURITY.md](SECURITY.md).
 
 ## Licence
 

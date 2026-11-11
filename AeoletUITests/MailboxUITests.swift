@@ -113,4 +113,14 @@ final class MailboxUITests: AeoletUITestCase {
         showLabel("Starred")
         XCTAssertTrue(row("Route for Sunday").waitForExistence(timeout: 10))
     }
+
+    func testPGPMailShowsAPlainPreviewInsteadOfArmour() {
+        launch()
+        signInAndWaitForInbox()
+        let encrypted = scrollTo("Confidential: contract draft")
+        XCTAssertTrue(encrypted.label.contains("Encrypted message"), "Encrypted row: \(encrypted.label)")
+        let signed = scrollTo("Signed release notes")
+        XCTAssertTrue(signed.label.contains("Signed message"), "Signed row: \(signed.label)")
+        XCTAssertFalse(anyText(containing: "-----BEGIN PGP").exists, "Raw PGP armour shown in the list")
+    }
 }

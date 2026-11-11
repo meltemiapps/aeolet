@@ -264,8 +264,18 @@ class AeoletUITestCase: XCTestCase {
 
     func type(_ text: String, into element: XCUIElement) {
         XCTAssertTrue(element.waitForExistence(timeout: 10))
-        element.tap()
+        // On iPad a tap sometimes lands while the form is still moving, leaving the field unfocused. Tap until it has focus.
+        for _ in 0..<4 {
+            element.tap()
+            if hasFocus(element) { break }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+            if hasFocus(element) { break }
+        }
         element.typeText(text)
+    }
+
+    func hasFocus(_ element: XCUIElement) -> Bool {
+        (element.value(forKey: "hasKeyboardFocus") as? Bool) ?? false
     }
 
     /// Secure fields clear themselves when refocused, and drop keystrokes while the keyboard switches
@@ -291,5 +301,29 @@ class AeoletUITestCase: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    // MARK: PGP
+
+    func generateKey(for account: String, name: String) {
+        let generate = app.buttons["Generate a new key"].firstMatch
+        XCTAssertTrue(generate.waitForExistence(timeout: 10), "No Generate button for \(account)")
+        generate.tap()
+        XCTAssertTrue(app.navigationBars["New PGP key"].waitForExistence(timeout: 10))
+        XCTAssertTrue(anyText(containing: account).exists, "Key sheet is for the wrong account")
+        type(name, into: app.textFields["Your name"])
+        typeSecure(Self.passphrase, into: app.secureTextFields["Passphrase, 12 characters or more"])
+        typeSecure(Self.passphrase, into: app.secureTextFields["Repeat passphrase"])
+        XCTAssertTrue(app.buttons["Create"].isEnabled, "Create stayed disabled after entering the passphrase")
+        app.buttons["Create"].tap()
+        waitUntil(90, "key generation for \(account) to finish") { !app.navigationBars["New PGP key"].exists }
+        XCTAssertTrue(keychain.contains("pgp.private.\(account)"), "No private key stored for \(account): \(keychain)")
+    }
+
+    func enterPassphrase(_ value: String, confirm: String) {
+        let field = app.secureTextFields["Passphrase"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10), "No passphrase prompt")
+        typeSecure(value, into: field)
+        app.alerts.buttons[confirm].tap()
     }
 }

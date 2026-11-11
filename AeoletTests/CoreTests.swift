@@ -105,4 +105,25 @@ final class CoreTests: XCTestCase {
         XCTAssertFalse(URLError(.cannotFindHost).userMessage.contains("NSURLErrorDomain"))
         XCTAssertEqual(GmailError.http(403, "Quota exceeded").userMessage, "Quota exceeded")
     }
+
+    func testPGPMailGetsAPlainPreview() {
+        XCTAssertEqual(ThreadSummary.preview(snippet: "-----BEGIN PGP MESSAGE----- hQIMA3x", contentType: "text/plain; charset=utf-8"), .encrypted)
+        XCTAssertEqual(ThreadSummary.preview(snippet: "", contentType: "multipart/encrypted; protocol=\"application/pgp-encrypted\"; boundary=x"), .encrypted)
+        XCTAssertEqual(ThreadSummary.preview(snippet: "-----BEGIN PGP SIGNED MESSAGE----- Hash: SHA512 Release 2.1", contentType: nil), .signed)
+        XCTAssertEqual(ThreadSummary.preview(snippet: "Release 2.1 is out", contentType: "Multipart/Signed; micalg=pgp-sha512"), .signed)
+        XCTAssertEqual(ThreadSummary.preview(snippet: "See you at -----BEGIN PGP MESSAGE-----", contentType: "text/plain"), .text("See you at -----BEGIN PGP MESSAGE-----"))
+    }
+
+    func testThreadSummaryFromGmailUsesContentTypeAndOldCachesStillDecode() throws {
+        let json = #"{"id":"t1","messages":[{"id":"m1","labelIds":["INBOX"],"snippet":"","internalDate":"0","payload":{"headers":[{"name":"From","value":"A <a@example.org>"},{"name":"Subject","value":"Secret"},{"name":"Content-Type","value":"multipart/encrypted; protocol=\"application/pgp-encrypted\""}]}}]}"#
+        let thread = try GmailClient.decode(GmailThread.self, from: Data(json.utf8))
+        let summary = try XCTUnwrap(ThreadSummary(thread: thread))
+        XCTAssertEqual(summary.preview, .encrypted)
+
+        // A summary cached before contentType existed still loads, and still recognises inline armour.
+        let old = #"{"id":"t2","sender":"B","subject":"S","snippet":"-----BEGIN PGP MESSAGE----- x","date":0,"isUnread":false,"isStarred":false,"messageCount":1,"labelIds":[]}"#
+        let cached = try JSONDecoder().decode(ThreadSummary.self, from: Data(old.utf8))
+        XCTAssertNil(cached.contentType)
+        XCTAssertEqual(cached.preview, .encrypted)
+    }
 }

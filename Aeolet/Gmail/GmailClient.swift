@@ -195,6 +195,7 @@ struct GmailClient {
             ("format", "metadata"),
             ("metadataHeaders", "From"),
             ("metadataHeaders", "Subject"),
+            ("metadataHeaders", "Content-Type"),
             ("fields", "id,snippet,messages(id,labelIds,snippet,internalDate,payload/headers)"),
         ])
     }

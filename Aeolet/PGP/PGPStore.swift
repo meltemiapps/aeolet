@@ -85,6 +85,28 @@ final class PGPStore: ObservableObject {
         setOwn(PGPOwnKey(account: account, fingerprint: details.fingerprint, publicKey: details.publicKey))
     }
 
+    /// Writes the account's private key, still locked with its passphrase, to a temporary .asc file for the share sheet.
+    /// Refuses to export a key that is not passphrase-protected. The caller deletes the file when sharing ends.
+    func exportPrivateKey(account: String) async throws -> URL {
+        let armored = try privateKey(for: account)
+        let details = try await PGPEngine.shared.inspect(armored: armored)
+        guard details.isPrivate, details.isLocked else {
+            throw PGPError.operation("This key is not protected by a passphrase, so Aeolet will not export it.")
+        }
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Key export", isDirectory: true)
+        try? FileManager.default.removeItem(at: folder)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let url = folder.appendingPathComponent("\(account.lowercased()) private key.asc")
+        try Data(armored.utf8).write(to: url, options: [.completeFileProtection, .withoutOverwriting])
+        #if DEBUG
+        if MockGmail.isActive {
+            let header = armored.hasPrefix("-----BEGIN PGP PRIVATE KEY BLOCK-----") ? "private" : "other"
+            MockGmailServer.shared.record("EXPORT key account=\(account) locked=\(details.isLocked) armour=\(header) file=\(url.lastPathComponent)")
+        }
+        #endif
+        return url
+    }
+
     private func setOwn(_ key: PGPOwnKey) {
         ownKeys.removeAll { $0.account == key.account }
         ownKeys.append(key)

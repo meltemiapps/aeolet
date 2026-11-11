@@ -1,26 +1,55 @@
 import XCTest
 
 final class PGPUITests: AeoletUITestCase {
-    private func generateKey(for account: String, name: String) {
-        let generate = app.buttons["Generate a new key"].firstMatch
-        XCTAssertTrue(generate.waitForExistence(timeout: 10), "No Generate button for \(account)")
-        generate.tap()
-        XCTAssertTrue(app.navigationBars["New PGP key"].waitForExistence(timeout: 10))
-        XCTAssertTrue(anyText(containing: account).exists, "Key sheet is for the wrong account")
-        type(name, into: app.textFields["Your name"])
-        typeSecure(Self.passphrase, into: app.secureTextFields["Passphrase, 12 characters or more"])
-        typeSecure(Self.passphrase, into: app.secureTextFields["Repeat passphrase"])
-        XCTAssertTrue(app.buttons["Create"].isEnabled, "Create stayed disabled after entering the passphrase")
-        app.buttons["Create"].tap()
-        waitUntil(90, "key generation for \(account) to finish") { !app.navigationBars["New PGP key"].exists }
-        XCTAssertTrue(keychain.contains("pgp.private.\(account)"), "No private key stored for \(account): \(keychain)")
+    /// Export warns first, hands over the passphrase-locked key through the share sheet, and cleans up after.
+    private func exportPrivateKey() {
+        let export = app.buttons["Export private key"].firstMatch
+        XCTAssertTrue(export.waitForExistence(timeout: 10), "No Export private key button")
+        export.tap()
+        let warning = app.alerts["Export your private key?"]
+        XCTAssertTrue(warning.waitForExistence(timeout: 10), "No warning before exporting")
+        XCTAssertTrue(warning.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "locked with your passphrase")).firstMatch.exists)
+        // Cancelling exports nothing.
+        let start = logPosition
+        warning.buttons["Cancel"].tap()
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        XCTAssertFalse(log.contains { $0.contains("EXPORT key") }, "Cancel still exported the key")
+
+        export.tap()
+        XCTAssertTrue(warning.waitForExistence(timeout: 10))
+        warning.buttons["Export"].tap()
+        let line = waitForLog("EXPORT key account=\(Self.elena)", after: start)
+        XCTAssertTrue(line.contains("locked=true") && line.contains("armour=private"), "Exported key was not passphrase-locked: \(line)")
+        let sheet = app.otherElements["ActivityListView"]
+        XCTAssertTrue(sheet.waitForExistence(timeout: 15), "Share sheet did not open")
+        XCTAssertTrue(anyText(containing: "private key").exists, "Share sheet does not show the key file")
+        closeShareSheet(sheet)
+        XCTAssertTrue(app.navigationBars["PGP keys"].exists)
     }
 
-    private func enterPassphrase(_ value: String, confirm: String) {
-        let field = app.secureTextFields["Passphrase"]
-        XCTAssertTrue(field.waitForExistence(timeout: 10), "No passphrase prompt")
-        typeSecure(value, into: field)
-        app.alerts.buttons[confirm].tap()
+    /// The share sheet's X lives in its own remote view; try it by name, then by its place in the top right corner.
+    private func closeShareSheet(_ sheet: XCUIElement) {
+        let closes = app.buttons.matching(NSPredicate(format: "label ==[c] 'Close' OR identifier ==[c] 'Close'"))
+        for index in (0..<closes.count).reversed() {
+            let close = closes.element(boundBy: index)
+            if close.isHittable { close.tap(); break }
+        }
+        if !waitFor(3, { !sheet.exists }) {
+            let window = app.windows.firstMatch.frame
+            app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: window.maxX - 48, dy: sheet.frame.minY - 40)).tap()
+        }
+        if !waitFor(3, { !sheet.exists }) { sheet.swipeDown(velocity: .fast) }
+        waitUntil(10, "the share sheet to close") { !sheet.exists }
+    }
+
+    private func waitFor(_ seconds: TimeInterval, _ condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(seconds)
+        while !condition() {
+            if Date() > deadline { return false }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        }
+        return true
     }
 
     func testEncryptSignSendDecryptVerifyAndWrongKey() {
@@ -37,6 +66,7 @@ final class PGPUITests: AeoletUITestCase {
         generateKey(for: Self.nikos, name: "Nikos Andreou")
         XCTAssertFalse(app.buttons["Generate a new key"].exists, "Both accounts should have a key")
         XCTAssertTrue(keychain.contains("pgp.private.\(Self.elena)") && keychain.contains("pgp.private.\(Self.nikos)"), "\(keychain)")
+        exportPrivateKey()
         app.navigationBars["PGP keys"].buttons.element(boundBy: 0).tap()
         app.buttons["Done"].tap()
 
@@ -62,6 +92,9 @@ final class PGPUITests: AeoletUITestCase {
 
         // Nikos decrypts it and sees a verified signature.
         switchAccount(to: Self.nikos)
+        // PGP/MIME mail is recognised from its Content-Type, so the list never shows armour or "Version: 1".
+        let lighthouse = scrollTo("Lighthouse")
+        XCTAssertTrue(lighthouse.label.contains("Encrypted message"), "Encrypted row: \(lighthouse.label)")
         open("Lighthouse")
         XCTAssertTrue(anyText(containing: "End-to-end encrypted").waitForExistence(timeout: 15))
         XCTAssertFalse(anyText(containing: "Meet at the lighthouse").exists, "Plaintext visible before decrypting")

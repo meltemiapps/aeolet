@@ -118,6 +118,23 @@ struct ThreadSummary: Codable, Identifiable, Hashable {
     var isStarred: Bool
     var messageCount: Int
     var labelIds: [String]
+    /// The latest message's Content-Type. Optional so summaries cached before it existed still decode.
+    var contentType: String?
+
+    /// What the list shows under the subject. PGP mail gets a plain description instead of armour.
+    enum Preview: Equatable {
+        case text(String), encrypted, signed
+    }
+
+    var preview: Preview { Self.preview(snippet: snippet, contentType: contentType) }
+
+    static func preview(snippet: String, contentType: String?) -> Preview {
+        let type = contentType?.lowercased() ?? ""
+        let text = snippet.trimmingCharacters(in: .whitespacesAndNewlines)
+        if type.hasPrefix("multipart/encrypted") || text.hasPrefix("-----BEGIN PGP MESSAGE-----") { return .encrypted }
+        if type.hasPrefix("multipart/signed") || text.hasPrefix("-----BEGIN PGP SIGNED MESSAGE-----") { return .signed }
+        return .text(snippet)
+    }
 
     init?(thread: GmailThread) {
         guard let messages = thread.messages, let last = messages.last, let first = messages.first else { return nil }
@@ -135,5 +152,6 @@ struct ThreadSummary: Codable, Identifiable, Hashable {
         isUnread = labels.contains("UNREAD")
         isStarred = labels.contains("STARRED")
         messageCount = messages.count
+        contentType = last.header("Content-Type")
     }
 }

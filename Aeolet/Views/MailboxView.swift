@@ -142,7 +142,15 @@ struct ThreadRow: View {
                     Text(Self.label(for: thread.date)).font(.caption).foregroundStyle(.secondary)
                 }
                 Text(thread.subject).font(.subheadline.weight(thread.isUnread ? .medium : .regular)).lineLimit(1)
-                Text(thread.snippet).font(.footnote).foregroundStyle(.secondary).lineLimit(2)
+                switch thread.preview {
+                case let .text(snippet):
+                    Text(snippet).font(.footnote).foregroundStyle(.secondary).lineLimit(2)
+                case .encrypted:
+                    // Inline images rather than Label, which would shift the row's separator inset.
+                    Text("\(Image(systemName: "lock.fill")) Encrypted message").font(.footnote).foregroundStyle(.secondary)
+                case .signed:
+                    Text("\(Image(systemName: "signature")) Signed message").font(.footnote).foregroundStyle(.secondary)
+                }
             }
         }
         .padding(.vertical, 2)

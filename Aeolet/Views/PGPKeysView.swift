@@ -10,6 +10,13 @@ struct PGPKeysView: View {
     @State private var isBusy = false
     @State private var message: String?
     @State private var keyToDelete: String?
+    @State private var keyToExport: String?
+    @State private var exportedFile: ExportedFile?
+
+    struct ExportedFile: Identifiable {
+        let url: URL
+        var id: URL { url }
+    }
 
     struct GenerateTarget: Identifiable {
         let id: String
@@ -32,6 +39,7 @@ struct PGPKeysView: View {
                     if let key = pgp.ownKey(for: account) {
                         FingerprintText(fingerprint: key.fingerprint)
                         ShareLink("Share public key", item: key.publicKey)
+                        Button("Export private key") { keyToExport = account }
                         Button("Remove private key", role: .destructive) { keyToDelete = account }
                     } else {
                         Button("Generate a new key") { generateFor = GenerateTarget(id: account) }
@@ -99,6 +107,33 @@ struct PGPKeysView: View {
         } message: {
             Text("Mail encrypted to this key cannot be read here without it. There is no recovery unless you hold a backup.")
         }
+        .alert("Export your private key?", isPresented: Binding(
+            get: { keyToExport != nil },
+            set: { if !$0 { keyToExport = nil } }
+        ), presenting: keyToExport) { account in
+            Button("Export") { Task { await export(account) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("This file is your private key. It stays locked with your passphrase, but anyone who has the file and your passphrase can read your encrypted mail and sign as you. Keep it in a private backup and never email or post it.")
+        }
+        .sheet(item: $exportedFile) { file in
+            ShareSheet(items: [file.url]) {
+                exportedFile = nil
+            }
+            .ignoresSafeArea()
+        }
+        .onChange(of: exportedFile?.id) { old, _ in
+            // Remove the temporary copy once the share sheet is gone.
+            if let old { try? FileManager.default.removeItem(at: old.deletingLastPathComponent()) }
+        }
+    }
+
+    private func export(_ account: String) async {
+        do {
+            exportedFile = ExportedFile(url: try await pgp.exportPrivateKey(account: account))
+        } catch {
+            message = error.userMessage
+        }
     }
 
     private func lookup() async {
@@ -112,6 +147,20 @@ struct PGPKeysView: View {
             message = error.userMessage
         }
     }
+}
+
+/// The system share sheet, for files a ShareLink can't hand over until they exist.
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    let onFinish: () -> Void
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, _, _, _ in onFinish() }
+        return controller
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
 
 struct FingerprintText: View {
