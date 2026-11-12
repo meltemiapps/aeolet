@@ -20,9 +20,8 @@ final class ScreenshotUITests: AeoletUITestCase {
         type("Weekend in Hydra", into: app.textFields["Subject"])
         type("Hi Sofia,\n\nThe early ferry leaves Piraeus at 8:00. Shall we meet at the gate?\n\nElena", into: app.textViews.firstMatch)
         app.buttons["Attach file"].tap()
-        app.textViews.firstMatch.tap()
-        app.buttons["Hide keyboard"].firstMatch.tap()
-        waitUntil(5, "the keyboard to go away") { !keyboardIsUp }
+        if app.keyboards.count == 0 { app.textViews.firstMatch.tap() }
+        hideKeyboard()
         RunLoop.current.run(until: Date().addingTimeInterval(1))
         save(app.screenshot(), as: "3-Compose")
         tapByPosition(app.buttons["Close"])

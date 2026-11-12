@@ -252,16 +252,20 @@ class AeoletUITestCase: XCTestCase {
     }
 
     /// Puts the keyboard away with Compose's own button, so controls further down the form are reachable.
-    func hideKeyboard() {
-        let hide = app.buttons["Hide keyboard"].firstMatch
-        if hide.exists && hide.isHittable { hide.tap() }
-        waitUntil(5, "the keyboard to go away") { !keyboardIsUp }
-    }
-
-    /// True while an on-screen keyboard covers the app. On iPad a hidden keyboard can leave a small floating
-    /// keyboard button behind, which still counts as a keyboard element, so only a full-height one counts.
-    var keyboardIsUp: Bool {
-        app.keyboards.allElementsBoundByIndex.contains { $0.exists && $0.frame.height > 150 }
+    /// Two buttons are labelled "Hide keyboard": Compose's toolbar button and a key on the system keyboard, which
+    /// can sit off screen. With a hardware keyboard, iPad shows Compose's toolbar shrunk to a small floating button,
+    /// which accessibility doesn't report as hittable, so the on-screen button is found by its frame and tapped by position.
+    func hideKeyboard(file: StaticString = #filePath, line: UInt = #line) {
+        for _ in 0..<3 {
+            if app.keyboards.count == 0 { return }
+            let screen = app.windows.firstMatch.frame
+            let onScreen = app.buttons.matching(identifier: "Hide keyboard").allElementsBoundByIndex
+                .first { $0.exists && screen.contains($0.frame) }
+            onScreen?.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            let deadline = Date().addingTimeInterval(3)
+            while Date() < deadline && app.keyboards.count > 0 { RunLoop.current.run(until: Date().addingTimeInterval(0.25)) }
+        }
+        waitUntil(2, "the keyboard to go away", file: file, line: line) { app.keyboards.count == 0 }
     }
 
     /// Taps by position: on older iOS, menus such as Compose's Close can't be reached through accessibility.
