@@ -4,11 +4,11 @@
 GOOGLE_CLIENT_PREFIX = 477031645831-5csr86vglrlhiics2e6fatlut9ond16o
 GOOGLE_URL_SCHEME = com.googleusercontent.apps.$(GOOGLE_CLIENT_PREFIX)
 
-// Xcode > Settings > Accounts shows your team. Leave empty and pick it in Signing & Capabilities if you prefer.
-DEVELOPMENT_TEAM =
+// Meltemi Apps' Apple team. If you build your own copy, replace it with your team from Xcode > Settings > Accounts.
+DEVELOPMENT_TEAM = 6Q7HCLY6C6
 PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet
 
-MARKETING_VERSION = 0.1.0
+MARKETING_VERSION = 1.0
 CURRENT_PROJECT_VERSION = 1
 
 // Shown under Settings > About once set. Keep the $() so the slashes are not read as a comment.

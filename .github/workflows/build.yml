@@ -26,7 +26,8 @@ jobs:
           xcrun simctl bootstatus "$DEVICE" -b
           xcodebuild test -project Aeolet.xcodeproj -scheme Aeolet -destination "id=$DEVICE" \
             -resultBundlePath TestResults.xcresult -retry-tests-on-failure -test-iterations 2 \
-            GOOGLE_CLIENT_PREFIX=ci-placeholder
+            GOOGLE_CLIENT_PREFIX=ci-placeholder DEVELOPMENT_TEAM=
+          # No team on CI: there is no Apple account there, so the Simulator build is signed to run locally.
           # Signed for local running (the default): an unsigned Simulator app has no Keychain access,
           # so sign-in in the UI tests could never store its token.
       - name: Mock is absent from Release
