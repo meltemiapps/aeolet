@@ -22,7 +22,7 @@ final class ScreenshotUITests: AeoletUITestCase {
         app.buttons["Attach file"].tap()
         app.textViews.firstMatch.tap()
         app.buttons["Hide keyboard"].firstMatch.tap()
-        waitUntil(5, "the keyboard to go away") { app.keyboards.count == 0 }
+        waitUntil(5, "the keyboard to go away") { !keyboardIsUp }
         RunLoop.current.run(until: Date().addingTimeInterval(1))
         save(app.screenshot(), as: "3-Compose")
         tapByPosition(app.buttons["Close"])

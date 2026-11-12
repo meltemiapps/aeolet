@@ -255,7 +255,13 @@ class AeoletUITestCase: XCTestCase {
     func hideKeyboard() {
         let hide = app.buttons["Hide keyboard"].firstMatch
         if hide.exists && hide.isHittable { hide.tap() }
-        waitUntil(5, "the keyboard to go away") { app.keyboards.count == 0 }
+        waitUntil(5, "the keyboard to go away") { !keyboardIsUp }
+    }
+
+    /// True while an on-screen keyboard covers the app. On iPad a hidden keyboard can leave a small floating
+    /// keyboard button behind, which still counts as a keyboard element, so only a full-height one counts.
+    var keyboardIsUp: Bool {
+        app.keyboards.allElementsBoundByIndex.contains { $0.exists && $0.frame.height > 150 }
     }
 
     /// Taps by position: on older iOS, menus such as Compose's Close can't be reached through accessibility.
