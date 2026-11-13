@@ -1,5 +1,8 @@
 name: Build and test
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches-ignore: [macos]
 jobs:
   pgp:
     runs-on: ubuntu-24.04

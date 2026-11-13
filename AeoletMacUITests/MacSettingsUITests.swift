@@ -1,7 +1,7 @@
 import XCTest
 
 final class MacSettingsUITests: MacUITestCase {
-    private var settings: XCUIElement { app.windows.containing(.any, identifier: "settings").firstMatch }
+    
 
     private func openSettings(tab: String) {
         app.typeKey(",", modifierFlags: .command)

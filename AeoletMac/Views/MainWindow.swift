@@ -103,7 +103,13 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $window.selection) {
             ForEach(app.accounts, id: \.self) { account in
-                AccountSection(account: account, mailbox: window.mailboxModel(for: account))
+                if let mailbox = window.mailboxes[account] {
+                    AccountSection(account: account, mailbox: mailbox)
+                } else {
+                    Section(account) {
+                        Label("Inbox", systemImage: "tray").tag(SidebarItem(account: account, label: "INBOX"))
+                    }
+                }
             }
         }
         .listStyle(.sidebar)

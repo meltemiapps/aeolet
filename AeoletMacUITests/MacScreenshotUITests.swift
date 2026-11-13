@@ -22,7 +22,7 @@ final class MacScreenshotUITests: MacUITestCase {
         save(NSImage(cgImage: cropped, size: frame.size), as: name)
     }
 
-    private var settings: XCUIElement { app.windows.containing(.any, identifier: "settings").firstMatch }
+    
 
     func testCaptureScreenshots() {
         launch(extra: ["-AeoletWindowSize", "1440x900"])

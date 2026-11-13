@@ -143,6 +143,11 @@ class MacUITestCase: XCTestCase {
         app.menuBars.menuBarItems[menu].menuItems[title]
     }
 
+    /// The Settings window, whose title is the selected tab.
+    var settings: XCUIElement {
+        app.windows.matching(NSPredicate(format: "title IN %@", ["General", "Accounts", "Encryption", "About"])).firstMatch
+    }
+
     /// The front compose window.
     var compose: XCUIElement { app.windows.containing(.any, identifier: "compose-body").firstMatch }
 
