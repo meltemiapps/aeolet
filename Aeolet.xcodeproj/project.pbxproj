@@ -34,6 +34,7 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0000000000000000000000A7 /* Aeolet */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Aeolet; sourceTree = "<group>"; };
 		0000000000000000000000A8 /* AeoletTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletTests; sourceTree = "<group>"; };
+		0000000000000000000000F0 /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shared; sourceTree = "<group>"; };
 		0000000000000000000000B1 /* AeoletUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -67,6 +68,7 @@
 			children = (
 				0000000000000000000000A9 /* Config.xcconfig */,
 				0000000000000000000000AA /* Support/Info.plist */,
+				0000000000000000000000F0 /* Shared */,
 				0000000000000000000000A7 /* Aeolet */,
 				0000000000000000000000A8 /* AeoletTests */,
 				0000000000000000000000B1 /* AeoletUITests */,
@@ -100,6 +102,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				0000000000000000000000F0 /* Shared */,
 				0000000000000000000000A7 /* Aeolet */,
 			);
 			name = Aeolet;
