@@ -9,8 +9,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var isLocked = false
     @Published var isSigningIn = false
     @Published var errorMessage: String?
-    @Published var requireDeviceAuth = UserDefaults.standard.bool(forKey: "requireDeviceAuth") {
-        didSet { UserDefaults.standard.set(requireDeviceAuth, forKey: "requireDeviceAuth") }
+    @Published var requireDeviceAuth = AppDefaults.store.bool(forKey: "requireDeviceAuth") {
+        didSet { AppDefaults.store.set(requireDeviceAuth, forKey: "requireDeviceAuth") }
     }
 
     private let signInFlow = GoogleSignIn()
@@ -22,7 +22,7 @@ final class AppModel: ObservableObject {
 
     private func load() async {
         accounts = await TokenStore.shared.accounts()
-        let last = UserDefaults.standard.string(forKey: "lastAccount") ?? ""
+        let last = AppDefaults.store.string(forKey: "lastAccount") ?? ""
         currentAccount = accounts.contains(last) ? last : accounts.first
         isLocked = requireDeviceAuth
         isLoaded = true
@@ -31,7 +31,7 @@ final class AppModel: ObservableObject {
 
     func select(_ account: String) {
         currentAccount = account
-        UserDefaults.standard.set(account, forKey: "lastAccount")
+        AppDefaults.store.set(account, forKey: "lastAccount")
     }
 
     func signIn() async {

@@ -2,7 +2,11 @@ import AuthenticationServices
 import CryptoKit
 import Foundation
 import Security
+#if os(iOS)
 import UIKit
+#else
+import AppKit
+#endif
 
 enum AuthError: LocalizedError {
     case cancelled, stateMismatch, missingCode, missingRefreshToken, scopeNotGranted, reauthenticationRequired(String), server(String)
@@ -173,9 +177,14 @@ final class GoogleSignIn: NSObject, ASWebAuthenticationPresentationContextProvid
     }
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        #if os(macOS)
+        // The sheet attaches to the window the person is using; it never gets a password, only Google's page does.
+        return NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first { $0.isVisible && $0.canBecomeKey } ?? ASPresentationAnchor()
+        #else
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         return scenes.first(where: { $0.activationState == .foregroundActive })?.keyWindow
             ?? scenes.first?.windows.first
             ?? ASPresentationAnchor()
+        #endif
     }
 }

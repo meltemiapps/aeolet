@@ -8,21 +8,8 @@ struct MessageWebView: UIViewRepresentable {
     @Binding var height: CGFloat
     let onLink: (URL) -> Void
 
-    private static let blockRules = """
-    [{"trigger":{"url-filter":"^https?://.*"},"action":{"type":"block"}}]
-    """
-
     static func document(from body: String, allowRemote: Bool) -> String {
-        let images = allowRemote ? "data: https:" : "data:"
-        let policy = "default-src 'none'; img-src \(images); style-src 'unsafe-inline'; font-src data:"
-        return """
-        <!doctype html><html><head>
-        <meta http-equiv="Content-Security-Policy" content="\(policy)">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="referrer" content="no-referrer">
-        <style>html{-webkit-text-size-adjust:100%}body{font:-apple-system-body;margin:0;word-wrap:break-word;overflow-wrap:anywhere}img{max-width:100%;height:auto}table{max-width:100%}pre{white-space:pre-wrap;font:inherit}</style>
-        </head><body>\(body)</body></html>
-        """
+        MessageHTML.document(from: body, allowRemote: allowRemote)
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
@@ -76,7 +63,7 @@ struct MessageWebView: UIViewRepresentable {
                 return
             }
             WKContentRuleListStore.default().compileContentRuleList(
-                forIdentifier: "aeolet.block-remote", encodedContentRuleList: MessageWebView.blockRules
+                forIdentifier: "aeolet.block-remote", encodedContentRuleList: MessageHTML.blockRules
             ) { list, _ in
                 // Fails closed: if the rule cannot be compiled the CSP above still blocks remote content.
                 Task { @MainActor in
@@ -94,18 +81,9 @@ struct MessageWebView: UIViewRepresentable {
             }
             decisionHandler(.cancel)
             if action.navigationType == .linkActivated, let url = action.request.url,
-               ["http", "https", "mailto"].contains(url.scheme?.lowercased() ?? "") {
+               MessageHTML.isOpenableLink(url) {
                 parent.onLink(url)
             }
         }
-    }
-}
-
-extension MailBody {
-    var renderableHTML: String {
-        if let html { return html }
-        let escaped = (text ?? "").htmlEscaped
-        let linked = escaped.replacingOccurrences(of: "(https?://[^\\s<>\"]+)", with: "<a href=\"$1\">$1</a>", options: .regularExpression)
-        return "<pre>\(linked)</pre>"
     }
 }

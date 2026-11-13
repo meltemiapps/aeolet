@@ -1,13 +1,16 @@
 #if DEBUG
 import Foundation
+#if os(iOS)
 import UIKit
+#endif
 
 /// Test-only stand-in for Google, compiled into Debug builds only (and excluded from Release by file name too).
 /// Launch with -AeoletMockGmail and every request from Network sessions is answered here instead of by Google.
 ///
 /// Optional launch arguments and environment:
 /// - `-AeoletResetState`: wipes Keychain items, private files and preferences before the app starts.
-/// - `-AeoletDisableAnimations`: turns UIKit animations off to make UI tests faster and steadier.
+/// - `-AeoletDisableAnimations`: turns UIKit animations off to make UI tests faster and steadier (iOS).
+/// - `-AeoletWindowSize 1440x900`: the Mac app's main window size, for App Store screenshots (macOS).
 /// - `AEOLET_MOCK_FAULT`: `401`, `403`, `429`, `500`, `missingField` (applied to the thread list) or `offline` (every request).
 enum MockGmail {
     static let isActive = ProcessInfo.processInfo.arguments.contains("-AeoletMockGmail")
@@ -25,9 +28,14 @@ enum MockGmail {
         if arguments.contains("-AeoletResetState") {
             KeychainStore.deleteAll()
             PrivateFile.deleteAll()
+            AppDefaults.store.removePersistentDomain(forName: "com.meltemiapps.aeolet.mock")
+            #if os(iOS)
             if let domain = Bundle.main.bundleIdentifier { UserDefaults.standard.removePersistentDomain(forName: domain) }
+            #endif
         }
+        #if os(iOS)
         if arguments.contains("-AeoletDisableAnimations") { UIView.setAnimationsEnabled(false) }
+        #endif
         _ = MockGmailServer.shared
     }
 

@@ -175,6 +175,11 @@ struct GmailClient {
         }
     }
 
+    /// One label with its counts, such as INBOX for the unread badge.
+    func label(_ id: String) async throws -> GmailLabel {
+        try await get("/labels/\(id.formEncoded)")
+    }
+
     // MARK: Threads
 
     func threads(labelID: String?, query: String?, pageToken: String?, limit: Int = 30) async throws -> (items: [ThreadSummary], next: String?) {

@@ -92,11 +92,29 @@ enum Theme {
     static let aegean = Color(red: 0.05, green: 0.36, blue: 0.58)
 }
 
-/// Stores small app data with iOS file protection and outside device backups.
+/// The app's preferences. Mock runs use a separate store, so UI tests on a Mac never reset the real app's settings.
+enum AppDefaults {
+    static let store: UserDefaults = {
+        #if DEBUG
+        if MockGmail.isActive, let mock = UserDefaults(suiteName: "com.meltemiapps.aeolet.mock") { return mock }
+        #endif
+        return .standard
+    }()
+}
+
+/// Stores small app data with file protection and outside device backups.
+/// On the Mac it lives inside the app's sandbox container, which other apps cannot read.
 enum PrivateFile {
+    private static var folderName: String {
+        #if DEBUG
+        if MockGmail.isActive { return "Private-Mock" }
+        #endif
+        return "Private"
+    }
+
     private static var directory: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Private", isDirectory: true)
+            .appendingPathComponent(folderName, isDirectory: true)
         if !FileManager.default.fileExists(atPath: base.path) {
             try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
             var copy = base

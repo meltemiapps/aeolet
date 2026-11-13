@@ -72,11 +72,11 @@ final class CoreTests: XCTestCase {
     }
 
     func testRemoteContentIsBlockedUnlessAllowed() {
-        let blocked = MessageWebView.document(from: "<img src=\"https://tracker.example/x.gif\">", allowRemote: false)
+        let blocked = MessageHTML.document(from: "<img src=\"https://tracker.example/x.gif\">", allowRemote: false)
         XCTAssertTrue(blocked.contains("img-src data:;"), "Only inline images may load by default")
         XCTAssertFalse(blocked.contains("img-src data: https:"))
         XCTAssertTrue(blocked.contains("default-src 'none'"))
-        let allowed = MessageWebView.document(from: "", allowRemote: true)
+        let allowed = MessageHTML.document(from: "", allowRemote: true)
         XCTAssertTrue(allowed.contains("img-src data: https:"))
     }
 

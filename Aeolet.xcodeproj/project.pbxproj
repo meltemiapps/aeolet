@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
+		000000000000000000000111 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0000000000000000000000A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000101;
+			remoteInfo = AeoletMac;
+		};
+		000000000000000000000112 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0000000000000000000000A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000101;
+			remoteInfo = AeoletMac;
+		};
 		0000000000000000000000B7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0000000000000000000000A0 /* Project object */;
@@ -29,6 +43,12 @@
 		0000000000000000000000A9 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		0000000000000000000000AA /* Support/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Support/Info.plist; sourceTree = "<group>"; };
 		0000000000000000000000B0 /* AeoletUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AeoletUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000102 /* Aeolet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aeolet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000104 /* AeoletMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AeoletMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000106 /* AeoletMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AeoletMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000109 /* Support/AeoletMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Support/AeoletMac.entitlements; sourceTree = "<group>"; };
+		00000000000000000000010B /* Support/AeoletMac-Unsigned.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Support/AeoletMac-Unsigned.entitlements"; sourceTree = "<group>"; };
+		00000000000000000000010A /* Support/Mac-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Support/Mac-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -36,6 +56,8 @@
 		0000000000000000000000A8 /* AeoletTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletTests; sourceTree = "<group>"; };
 		0000000000000000000000F0 /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shared; sourceTree = "<group>"; };
 		0000000000000000000000B1 /* AeoletUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletUITests; sourceTree = "<group>"; };
+		000000000000000000000107 /* AeoletMac */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletMac; sourceTree = "<group>"; };
+		000000000000000000000108 /* AeoletMacUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AeoletMacUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +82,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		000000000000000000000121 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000124 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000127 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -68,10 +111,15 @@
 			children = (
 				0000000000000000000000A9 /* Config.xcconfig */,
 				0000000000000000000000AA /* Support/Info.plist */,
+				00000000000000000000010A /* Support/Mac-Info.plist */,
+				000000000000000000000109 /* Support/AeoletMac.entitlements */,
+				00000000000000000000010B /* Support/AeoletMac-Unsigned.entitlements */,
 				0000000000000000000000F0 /* Shared */,
 				0000000000000000000000A7 /* Aeolet */,
 				0000000000000000000000A8 /* AeoletTests */,
 				0000000000000000000000B1 /* AeoletUITests */,
+				000000000000000000000107 /* AeoletMac */,
+				000000000000000000000108 /* AeoletMacUITests */,
 				0000000000000000000000A2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -82,6 +130,9 @@
 				0000000000000000000000A5 /* Aeolet.app */,
 				0000000000000000000000A6 /* AeoletTests.xctest */,
 				0000000000000000000000B0 /* AeoletUITests.xctest */,
+				000000000000000000000102 /* Aeolet.app */,
+				000000000000000000000104 /* AeoletMacTests.xctest */,
+				000000000000000000000106 /* AeoletMacUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -152,6 +203,69 @@
 			productReference = 0000000000000000000000B0 /* AeoletUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		000000000000000000000101 /* AeoletMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000131 /* Build configuration list for PBXNativeTarget "AeoletMac" */;
+			buildPhases = (
+				000000000000000000000120,
+				000000000000000000000121,
+				000000000000000000000122,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0000000000000000000000F0,
+				000000000000000000000107,
+			);
+			name = AeoletMac;
+			productName = AeoletMac;
+			productReference = 000000000000000000000102;
+			productType = "com.apple.product-type.application";
+		};
+		000000000000000000000103 /* AeoletMacTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000132 /* Build configuration list for PBXNativeTarget "AeoletMacTests" */;
+			buildPhases = (
+				000000000000000000000123,
+				000000000000000000000124,
+				000000000000000000000125,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000113,
+			);
+			fileSystemSynchronizedGroups = (
+				0000000000000000000000A8,
+			);
+			name = AeoletMacTests;
+			productName = AeoletMacTests;
+			productReference = 000000000000000000000104;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		000000000000000000000105 /* AeoletMacUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000133 /* Build configuration list for PBXNativeTarget "AeoletMacUITests" */;
+			buildPhases = (
+				000000000000000000000126,
+				000000000000000000000127,
+				000000000000000000000128,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000114,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000108,
+			);
+			name = AeoletMacUITests;
+			productName = AeoletMacUITests;
+			productReference = 000000000000000000000106;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -178,6 +292,9 @@
 				0000000000000000000000A3 /* Aeolet */,
 				0000000000000000000000A4 /* AeoletTests */,
 				0000000000000000000000B2 /* AeoletUITests */,
+				000000000000000000000101 /* AeoletMac */,
+				000000000000000000000103 /* AeoletMacTests */,
+				000000000000000000000105 /* AeoletMacUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -198,6 +315,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0000000000000000000000E5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000122 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000125 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000128 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -228,6 +366,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		000000000000000000000120 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000123 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000126 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -240,6 +399,16 @@
 			isa = PBXTargetDependency;
 			target = 0000000000000000000000A3 /* Aeolet */;
 			targetProxy = 0000000000000000000000E7 /* PBXContainerItemProxy */;
+		};
+		000000000000000000000113 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000101 /* AeoletMac */;
+			targetProxy = 000000000000000000000111 /* PBXContainerItemProxy */;
+		};
+		000000000000000000000114 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000101 /* AeoletMac */;
+			targetProxy = 000000000000000000000112 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -367,6 +536,113 @@
 			};
 			name = Release;
 		};
+		000000000000000000000141 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Support/AeoletMac$(AEOLET_ENTITLEMENTS_SUFFIX).entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Support/Mac-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_MODULE_NAME = Aeolet;
+				PRODUCT_NAME = Aeolet;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Debug;
+		};
+		000000000000000000000142 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Support/AeoletMac$(AEOLET_ENTITLEMENTS_SUFFIX).entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = "MockGmail*.swift";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Support/Mac-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_MODULE_NAME = Aeolet;
+				PRODUCT_NAME = Aeolet;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Release;
+		};
+		000000000000000000000143 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet.mac.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aeolet.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Aeolet";
+			};
+			name = Debug;
+		};
+		000000000000000000000144 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet.mac.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aeolet.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Aeolet";
+			};
+			name = Release;
+		};
+		000000000000000000000145 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet.mac.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				TEST_TARGET_NAME = AeoletMac;
+			};
+			name = Debug;
+		};
+		000000000000000000000146 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet.mac.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				TEST_TARGET_NAME = AeoletMac;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -402,6 +678,33 @@
 			buildConfigurations = (
 				0000000000000000000000C6 /* Debug */,
 				0000000000000000000000C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000131 /* Build configuration list for PBXNativeTarget "AeoletMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000141 /* Debug */,
+				000000000000000000000142 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000132 /* Build configuration list for PBXNativeTarget "AeoletMacTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000143 /* Debug */,
+				000000000000000000000144 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000133 /* Build configuration list for PBXNativeTarget "AeoletMacUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000145 /* Debug */,
+				000000000000000000000146 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

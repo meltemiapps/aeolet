@@ -1,6 +1,10 @@
 #if DEBUG
 import Foundation
+#if os(iOS)
 import UIKit
+#else
+import AppKit
+#endif
 
 /// Realistic, fictional mail for the mock Gmail server. Everything uses reserved example domains.
 enum MockGmailFixtures {
@@ -223,6 +227,7 @@ enum MockGmailFixtures {
 
     // MARK: Generated attachments
 
+    #if os(iOS)
     static func pdf(title: String) -> Data {
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 595, height: 842))
         return renderer.pdfData { context in
@@ -243,6 +248,39 @@ enum MockGmailFixtures {
         }
         return image.jpegData(compressionQuality: 0.8) ?? Data()
     }
+    #else
+    static func pdf(title: String) -> Data {
+        let data = NSMutableData()
+        var box = CGRect(x: 0, y: 0, width: 595, height: 842)
+        guard let consumer = CGDataConsumer(data: data as CFMutableData),
+              let context = CGContext(consumer: consumer, mediaBox: &box, nil) else { return Data() }
+        context.beginPDFPage(nil)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
+        (title as NSString).draw(at: CGPoint(x: 60, y: 842 - 108), withAttributes: [.font: NSFont.boldSystemFont(ofSize: 28)])
+        ("Sample document generated for Aeolet's test fixtures." as NSString)
+            .draw(at: CGPoint(x: 60, y: 842 - 147), withAttributes: [.font: NSFont.systemFont(ofSize: 14)])
+        NSGraphicsContext.restoreGraphicsState()
+        context.endPDFPage()
+        context.closePDF()
+        return data as Data
+    }
+
+    static func jpeg(caption: String) -> Data {
+        guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 800, pixelsHigh: 533, bitsPerSample: 8,
+                                            samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+                                            bytesPerRow: 0, bitsPerPixel: 0),
+              let graphics = NSGraphicsContext(bitmapImageRep: bitmap) else { return Data() }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = graphics
+        let colors = [NSColor(red: 0.98, green: 0.82, blue: 0.55, alpha: 1).cgColor, NSColor(red: 0.05, green: 0.37, blue: 0.6, alpha: 1).cgColor]
+        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 1])!
+        graphics.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 0, y: 533), options: [])
+        (caption as NSString).draw(at: CGPoint(x: 40, y: 30), withAttributes: [.font: NSFont.boldSystemFont(ofSize: 56), .foregroundColor: NSColor.white])
+        NSGraphicsContext.restoreGraphicsState()
+        return bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8]) ?? Data()
+    }
+    #endif
 
     // MARK: OpenPGP made with GnuPG for "Dimitra Kosta <dimitra@example.net>", a key no test account holds.
 

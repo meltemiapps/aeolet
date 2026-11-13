@@ -69,6 +69,7 @@ struct GmailLabel: Codable, Identifiable, Hashable {
     let name: String
     let type: String?
     let messagesUnread: Int?
+    let threadsUnread: Int?
 
     var displayName: String {
         guard type == "system" else { return name }

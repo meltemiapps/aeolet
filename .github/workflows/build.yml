@@ -31,11 +31,31 @@ jobs:
           # Signed for local running (the default): an unsigned Simulator app has no Keychain access,
           # so sign-in in the UI tests could never store its token.
       - name: Mock is absent from Release
-        run: Scripts/check-release-excludes-mock.sh
+        run: Scripts/check-release-excludes-mock.sh ios
       - name: Keep test results and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ios-test-results
           path: TestResults.xcresult
+          if-no-files-found: ignore
+  mac:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Mac unit and UI tests (UI tests run against the in-app mock Gmail server)
+        run: |
+          # No Apple account on CI: the app is signed to run locally, with the same sandbox entitlements
+          # minus the Keychain access group, which needs a provisioning profile.
+          xcodebuild test -project Aeolet.xcodeproj -scheme AeoletMac -destination "platform=macOS" \
+            -resultBundlePath MacTestResults.xcresult -retry-tests-on-failure -test-iterations 2 \
+            GOOGLE_CLIENT_PREFIX=ci-placeholder DEVELOPMENT_TEAM= CODE_SIGN_IDENTITY=- AEOLET_ENTITLEMENTS_SUFFIX=-Unsigned
+      - name: Mock is absent from the Mac Release build
+        run: Scripts/check-release-excludes-mock.sh mac
+      - name: Keep test results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-test-results
+          path: MacTestResults.xcresult
           if-no-files-found: ignore

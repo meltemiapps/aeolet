@@ -1,6 +1,6 @@
 # Aeolet
 
-An open-source, native Gmail client for iPhone and iPad, in the spirit of K-9 Mail. Free, no ads, no tracking and no server: the app talks directly to Google.
+An open-source, native Gmail client for iPhone, iPad and Mac, in the spirit of K-9 Mail. Free, no ads, no tracking and no server: the app talks directly to Google.
 
 ## What it does
 
@@ -14,9 +14,19 @@ An open-source, native Gmail client for iPhone and iPad, in the spirit of K-9 Ma
 
 Requested Google permission: `gmail.modify`. It cannot permanently delete mail.
 
+## On the Mac
+
+A native SwiftUI Mac app (macOS 14 or later), not an iPad port. It shares all non-UI code with iOS (`Shared/`): the Gmail client, sign-in, Keychain, MIME, PGP and the mail cache. One App Store purchase covers iPhone, iPad and Mac.
+
+- Three columns: accounts and labels, conversations, the conversation.
+- Menus and shortcuts: ⌘N new message, ⌘R reply, ⇧⌘R reply all, ⇧⌘F forward, E archive, ⌘⌫ Bin, ⇧⌘U read or unread, ⇧⌘L star, ⌘O open in a new window, ⌘F search, ⇧⌘N get new mail, ⇧⌘D send, ⌘, Settings.
+- Compose in its own window, several at once. Drag files in to attach them; drag attachments out to Finder or into a message; Save Attachment puts a file in any folder you choose, including Google Drive for desktop if it is installed.
+- Checks for new mail on a timer while it is open (every 5 minutes by default), with notifications and the unread count on the Dock icon. Optional Open at Login. No server and no push, so nothing arrives while Aeolet is closed.
+- Same security as iOS: sign-in in Apple's system sheet with PKCE, refresh tokens in the data protection keychain (this Mac only, never iCloud), App Sandbox limited to outgoing network, files you choose and Downloads, Hardened Runtime, and an optional Touch ID or password lock that engages when Aeolet is hidden, the Mac sleeps or the screen locks.
+
 ## Setup
 
-You need a Mac with Xcode (free, Mac App Store), a Google account, and an iPhone.
+You need a Mac with Xcode (free, Mac App Store), a Google account, and an iPhone or just the Mac.
 
 ### 1. Create your Google OAuth client (free)
 
@@ -31,6 +41,7 @@ You need a Mac with Xcode (free, Mac App Store), a Google account, and an iPhone
 2. Open `Aeolet.xcodeproj`.
 3. Select the Aeolet target, then **Signing & Capabilities**, and choose your team. If the bundle ID is taken for your team, change it in `Config.xcconfig` and in the Google client.
 4. Plug in your iPhone and press Run. Enable Developer Mode on the phone when iOS asks.
+5. For the Mac, choose the **AeoletMac** scheme and **My Mac**, then Run. The Mac app uses the same iOS client ID. Xcode registers your Mac with your team the first time, because the data protection keychain needs a provisioning profile.
 
 With a free Apple account the app stops opening after 7 days until you run it from Xcode again. The paid Apple Developer Program removes that limit and adds TestFlight.
 
@@ -57,17 +68,21 @@ The cryptography is [OpenPGP.js](https://github.com/openpgpjs/openpgpjs), run in
 ## Tests
 
 - `AeoletTests`: OAuth PKCE vectors, MIME building and parsing, header-injection protection, error wording, the remote-content policy, and an OpenPGP round trip through the app's own engine.
+- `AeoletMacUITests`: the Mac app end to end against the same mock: three-column browsing, search, keyboard shortcuts (E, ⌘⌫, ⇧⌘L, ⇧⌘U, ⌘O), compose windows with send, reply, reply all, forward and the save-draft prompt, saving attachments and dragging them into a message, two accounts and signing out, Google's errors and offline. `AeoletTests` also runs on macOS.
 - `AeoletUITests`: the whole app driven end to end in the Simulator: sign-in, inbox, search, labels, compose with attachments, reply, reply all, forward, archive, star, read and unread, Bin, two accounts and signing out, remote images, Face ID lock, PGP between two accounts, Google's error responses and offline. They never touch a real Gmail account.
 - `PGP/js/test`: 24 checks in a real browser engine under the production content policy, including interoperability with GnuPG in both directions.
-- `Scripts/check-release-excludes-mock.sh`: builds Release and fails if any trace of the mock below is in it.
+- `Scripts/check-release-excludes-mock.sh [ios|mac]`: builds Release and fails if any trace of the mock below is in it.
 
 ```sh
 xcodebuild test -project Aeolet.xcodeproj -scheme Aeolet -destination "platform=iOS Simulator,name=iPhone 17"
+xcodebuild test -project Aeolet.xcodeproj -scheme AeoletMac -destination "platform=macOS"
 ```
+
+Mac UI tests need UI automation, which macOS turns on after asking for your password the first time, and they take over the mouse while they run. Mock runs on a Mac keep their own Keychain items, files and preferences, so they never touch your real sign-in.
 
 ### Mock Gmail
 
-Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install, and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. None of it is compiled into Release builds.
+Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install (of the mock's own data, on a Mac), and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. None of it is compiled into Release builds.
 
 ## Security
 

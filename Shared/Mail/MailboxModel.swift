@@ -28,6 +28,10 @@ final class MailboxModel: ObservableObject {
     func start() async {
         threads = MailCache.load(account: account, label: selectedLabelID)
         await refresh()
+        await loadLabels()
+    }
+
+    func loadLabels() async {
         if let found = try? await client.labels() { labels = found }
     }
 
