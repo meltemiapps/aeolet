@@ -9,22 +9,53 @@ struct MockGmailProbe: View {
     private let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
+        element
+            .onReceive(NotificationCenter.default.publisher(for: MockGmailServer.didChange)) { _ in refresh() }
+            .onReceive(timer) { _ in refresh() }
+            .allowsHitTesting(false)
+    }
+
+    #if os(macOS)
+    /// SwiftUI on macOS leaves a clear 1-point view out of the accessibility tree, so the Mac uses an AppKit element.
+    private var element: some View {
+        ProbeElement(value: snapshot).frame(width: 1, height: 1)
+    }
+    #else
+    private var element: some View {
         Color.clear
             .frame(width: 1, height: 1)
             .accessibilityElement()
             .accessibilityIdentifier("mock-probe")
             .accessibilityLabel("Mock probe")
             .accessibilityValue(snapshot)
-            .onReceive(NotificationCenter.default.publisher(for: MockGmailServer.didChange)) { _ in refresh() }
-            .onReceive(timer) { _ in refresh() }
-            .allowsHitTesting(false)
     }
+    #endif
 
     private func refresh() {
         let next = MockGmailServer.shared.snapshot()
         if next != snapshot { snapshot = next }
     }
 }
+
+#if os(macOS)
+private struct ProbeElement: NSViewRepresentable {
+    let value: String
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
+        view.setAccessibilityElement(true)
+        view.setAccessibilityRole(.staticText)
+        view.setAccessibilityIdentifier("mock-probe")
+        view.setAccessibilityLabel("Mock probe")
+        view.setAccessibilityValue(value)
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        view.setAccessibilityValue(value)
+    }
+}
+#endif
 
 extension KeychainStore {
     /// Every item name this app holds, used by the probe to show that signing out removes credentials.
