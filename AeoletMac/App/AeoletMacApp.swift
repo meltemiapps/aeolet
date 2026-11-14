@@ -65,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
+        installArchiveKey()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { WindowOpener.ensureViewerWindow() }
     }
 
@@ -90,6 +91,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 Task { @MainActor in self?.app?.didBecomeActive() }
             },
         ]
+    }
+
+    /// E archives, as in Gmail. The conversation list would take a plain letter for type-to-select before the
+    /// menu bar sees it, so the key is handled here, and never while text is being edited.
+    private func installArchiveKey() {
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            let modifiers = event.modifierFlags.intersection([.command, .option, .control, .shift])
+            guard modifiers.isEmpty, event.charactersIgnoringModifiers == "e",
+                  self?.app?.isLocked != true,
+                  !(NSApp.keyWindow?.firstResponder is NSTextView),
+                  let model = MailWindowModel.model(for: NSApp.keyWindow), model.hasThread else { return event }
+            Task { await model.archive() }
+            return nil
+        }
     }
 
     private func leaveForeground() {

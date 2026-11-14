@@ -98,8 +98,7 @@ final class MacMailboxUITests: MacUITestCase {
     func testPGPMailShowsAPlainPreviewInsteadOfArmour() {
         launch()
         signInAndWaitForInbox()
-        XCTAssertTrue(row("Confidential: contract draft").label.contains("Encrypted message") ||
-                      anyText(containing: "Encrypted message").exists)
+        XCTAssertTrue(anyText(containing: "Encrypted message").exists, "Encrypted row should say so")
         XCTAssertFalse(anyText(containing: "-----BEGIN PGP").exists, "Raw PGP armour shown in the list")
     }
 }

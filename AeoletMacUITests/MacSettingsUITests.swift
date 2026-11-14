@@ -13,8 +13,8 @@ final class MacSettingsUITests: MacUITestCase {
         launch()
         signInAndWaitForInbox()
         openSettings(tab: "General")
-        XCTAssertTrue(settings.popUpButtons["Check for new mail"].exists || anyText(containing: "Every 5 minutes").exists,
-                      "Refresh interval missing")
+        XCTAssertTrue(settings.popUpButtons.firstMatch.waitForExistence(timeout: 5), "Refresh interval missing")
+        XCTAssertEqual(settings.popUpButtons.firstMatch.value as? String, "Every 5 minutes")
         XCTAssertTrue(settings.checkBoxes["Open at login"].exists || settings.switches["Open at login"].exists)
         XCTAssertTrue(settings.checkBoxes["Require Touch ID or password"].exists || settings.switches["Require Touch ID or password"].exists)
     }
@@ -35,7 +35,7 @@ final class MacSettingsUITests: MacUITestCase {
         openSettings(tab: "Accounts")
         settings.buttons.matching(identifier: "Sign Out…").element(boundBy: 1).click()
         let start = logPosition
-        app.buttons["Sign Out"].firstMatch.click()
+        clickDialogButton("Sign Out")
         waitForLog("REVOKE", after: start)
         waitUntil(10, "Nikos's token to be deleted") { !keychain.contains("oauth.refresh.\(Self.nikos)") }
         XCTAssertTrue(keychain.contains("oauth.refresh.\(Self.elena)"), "Elena must stay signed in")
@@ -44,7 +44,7 @@ final class MacSettingsUITests: MacUITestCase {
         XCTAssertFalse(sidebar("INBOX", account: Self.nikos).exists)
 
         settings.buttons.matching(identifier: "Sign Out…").firstMatch.click()
-        app.buttons["Sign Out"].firstMatch.click()
+        clickDialogButton("Sign Out")
         waitUntil(15, "every credential to be deleted") { keychain.isEmpty && cacheFiles.values.allSatisfy { $0 == 0 } }
         XCTAssertTrue(app.buttons["Sign in with Google"].waitForExistence(timeout: 10))
     }

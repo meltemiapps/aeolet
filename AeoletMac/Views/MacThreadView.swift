@@ -107,6 +107,7 @@ struct ThreadWindow: View {
             }
         }
         .frame(minWidth: 520, minHeight: 400)
+        .background(WindowAccessor { MailWindowModel.track(window, in: $0, viewer: false) })
         .lockable()
         .focusedSceneObject(window)
         .onAppear {

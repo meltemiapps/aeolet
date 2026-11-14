@@ -56,7 +56,16 @@ final class MailWindowModel: ObservableObject {
     private(set) static weak var lastActive: MailWindowModel?
     private var keyObserver: NSObjectProtocol?
 
-    static func track(_ model: MailWindowModel, in window: NSWindow) {
+    private static let byWindow = NSMapTable<NSWindow, MailWindowModel>.weakToWeakObjects()
+
+    /// The model behind a viewer or conversation window, for keys the menu bar can't see.
+    static func model(for window: NSWindow?) -> MailWindowModel? {
+        window.flatMap { byWindow.object(forKey: $0) }
+    }
+
+    static func track(_ model: MailWindowModel, in window: NSWindow, viewer: Bool = true) {
+        byWindow.setObject(model, forKey: window)
+        guard viewer else { return }
         if lastActive == nil || window.isKeyWindow { lastActive = model }
         model.keyObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main

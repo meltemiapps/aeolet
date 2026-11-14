@@ -43,7 +43,7 @@ final class MacScreenshotUITests: MacUITestCase {
         app.typeKey("a", modifierFlags: [.command, .shift])
         capture("3-Compose")
         app.typeKey("w", modifierFlags: .command)
-        app.buttons["Delete Draft"].firstMatch.click()
+        clickDialogButton("Delete Draft")
 
         // Nikos sends Elena an encrypted, signed message; Elena decrypts it on her Mac.
         app.typeKey(",", modifierFlags: .command)
@@ -85,20 +85,20 @@ final class MacScreenshotUITests: MacUITestCase {
         let field = app.secureTextFields["Passphrase"].firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10), "No passphrase prompt")
         type(Self.passphrase, into: field)
-        app.buttons["Sign and Send"].firstMatch.click()
+        clickDialogButton("Sign and Send")
         waitForLog("DELIVER to=\(Self.elena)", after: start, timeout: 40)
 
         mainWindow.click()
         sidebar("INBOX").click()
         waitForLog("LIST label=INBOX", "account=\(Self.elena)", after: start)
         select("Keys to the Naxos studio")
-        let decrypt = app.buttons["Decrypt"].firstMatch
+        let decrypt = mainWindow.buttons["Decrypt"].firstMatch
         if decrypt.waitForExistence(timeout: 10) {
             decrypt.click()
             let prompt = app.secureTextFields["Passphrase"].firstMatch
             XCTAssertTrue(prompt.waitForExistence(timeout: 10))
             type(Self.passphrase, into: prompt)
-            app.buttons["Decrypt"].firstMatch.click()
+            clickDialogButton("Decrypt")
         }
         XCTAssertTrue(anyText(containing: "The lease is signed").waitForExistence(timeout: 30), "Decrypted text not shown")
         XCTAssertTrue(anyText(containing: "Decrypted on this Mac").exists)

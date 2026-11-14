@@ -82,10 +82,8 @@ final class MacComposeUITests: MacUITestCase {
         waitForCompose()
         type("A thought for later", into: field("compose-subject"))
         app.typeKey("w", modifierFlags: .command)
-        let save = app.buttons["Save Draft"].firstMatch
-        XCTAssertTrue(save.waitForExistence(timeout: 5), "Closing a message with content should ask about a draft")
         let start = logPosition
-        save.click()
+        clickDialogButton("Save Draft")
         waitForLog("DRAFT account=\(Self.elena)", "subject=A thought for later", after: start)
         waitUntil(10, "the compose window to close") { !compose.exists }
 
@@ -100,12 +98,13 @@ final class MacComposeUITests: MacUITestCase {
         launch(extra: ["-AeoletAutoSave"])
         signInAndWaitForInbox()
         select("Your ferry tickets: Piraeus to Naxos")
-        let chip = app.descendants(matching: .any)["attachment-Boarding passes.pdf"]
-        XCTAssertTrue(chip.waitForExistence(timeout: 15))
+        let actions = app.menuButtons["Attachment actions for Boarding passes.pdf"]
+        XCTAssertTrue(actions.waitForExistence(timeout: 15))
+        let chip = app.staticTexts.matching(NSPredicate(format: "value == %@", "Boarding passes.pdf")).firstMatch
 
         // Save Attachment… writes the file where the person chooses (the mock answers the Save panel).
         var start = logPosition
-        chip.menuButtons.firstMatch.click()
+        actions.click()
         app.menuItems["Save Attachment…"].click()
         waitForLog("SAVE attachment=Boarding passes.pdf", after: start)
 

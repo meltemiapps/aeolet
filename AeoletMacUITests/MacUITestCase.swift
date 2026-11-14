@@ -124,9 +124,23 @@ class MacUITestCase: XCTestCase {
         app.descendants(matching: .any).matching(identifier: "label-\(account)-\(label)").firstMatch
     }
 
+    /// Text anywhere in the app, including inside a message's web view. Only static texts are searched:
+    /// a predicate over every element times out on a full mailbox.
     func anyText(containing fragment: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@ OR value CONTAINS[c] %@ OR title CONTAINS[c] %@",
-                                                             fragment, fragment, fragment)).firstMatch
+        app.staticTexts.matching(NSPredicate(format: "value CONTAINS[c] %@ OR label CONTAINS[c] %@", fragment, fragment)).firstMatch
+    }
+
+    /// A button in a dialog or sheet. Every dialog button has a Touch Bar twin, which can't be clicked.
+    func dialogButton(_ title: String) -> XCUIElement {
+        let sheet = app.sheets.buttons[title].firstMatch
+        return sheet.exists ? sheet : app.dialogs.buttons[title].firstMatch
+    }
+
+    func clickDialogButton(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
+        let deadline = Date().addingTimeInterval(10)
+        while Date() < deadline && !dialogButton(title).exists { RunLoop.current.run(until: Date().addingTimeInterval(0.25)) }
+        XCTAssertTrue(dialogButton(title).exists, "No dialog button \(title)", file: file, line: line)
+        dialogButton(title).click()
     }
 
     func menu(_ path: String...) {
