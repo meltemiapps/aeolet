@@ -6,23 +6,30 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: |
+          set +e
           xcodebuild build -project Aeolet.xcodeproj -scheme AeoletMac -destination "platform=macOS" -derivedDataPath build/DD \
             GOOGLE_CLIENT_PREFIX=ci-placeholder DEVELOPMENT_TEAM= CODE_SIGN_IDENTITY=- AEOLET_ENTITLEMENTS_SUFFIX=-Unsigned > build.log 2>&1 || tail -50 build.log
+          cat > windows.swift <<'SWIFT'
+          import CoreGraphics
+          import Foundation
+          let pid = Int(CommandLine.arguments[1])!
+          let list = CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID) as? [[String: Any]] ?? []
+          for w in list where (w[kCGWindowOwnerPID as String] as? Int) == pid {
+              print("window:", w[kCGWindowName as String] ?? "-", "layer", w[kCGWindowLayer as String] ?? "-", "onscreen", w[kCGWindowIsOnscreen as String] ?? "-", w[kCGWindowBounds as String] ?? "-")
+          }
+          SWIFT
+          swiftc windows.swift -o windows
           APP=build/DD/Build/Products/Debug/Aeolet.app/Contents/MacOS/Aeolet
           sw_vers
-          for args in "-AeoletMockGmail -AeoletResetState" "-AeoletMockGmail -AeoletResetState -ApplePersistenceIgnoreState YES" ""; do
+          for args in "-AeoletMockGmail -AeoletResetState" "" "-AeoletMockGmail -AeoletResetState -ApplePersistenceIgnoreState YES"; do
             echo "=== launch with: $args"
             $APP $args > app.log 2>&1 &
             PID=$!
-            sleep 12
-            python3 -c "
-          import Quartz, sys
-          for w in Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionAll, Quartz.kCGNullWindowID):
-              if w.get('kCGWindowOwnerPID') == $PID: print(dict((k, w.get(k)) for k in ('kCGWindowName','kCGWindowLayer','kCGWindowBounds','kCGWindowIsOnscreen')))
-          " 2>&1 || pip3 list 2>/dev/null | grep -i pyobjc
-            screencapture -x "shot-$RANDOM.png" || true
+            sleep 15
+            ./windows $PID
+            screencapture -x "shot-$RANDOM.png"
             kill $PID; sleep 2
-            grep -v "ResourceLoadStatistics\|AFPreferences" app.log | head -60
+            grep -v "ResourceLoadStatistics\|AFPreferences\|GenerativeModels\|Greymatter" app.log | head -40
           done
       - uses: actions/upload-artifact@v4
         if: always()
