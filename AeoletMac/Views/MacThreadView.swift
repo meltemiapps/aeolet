@@ -352,7 +352,6 @@ private struct AttachmentChip: View {
         #if DEBUG
         if MockGmail.isActive {
             MockGmailServer.shared.record("DRAG attachment=\(item.filename)")
-            NSLog("Aeolet mock: drag started for %@", item.filename)
         }
         #endif
         guard !encrypted else {
