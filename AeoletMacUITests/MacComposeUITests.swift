@@ -125,4 +125,25 @@ final class MacComposeUITests: MacUITestCase {
         XCTAssertTrue(attached.contains(".pdf bytes="), "Dropped attachment should arrive as the PDF: \(attached)")
         XCTAssertFalse(attached.hasSuffix("bytes=0"), attached)
     }
+
+    func testTwentyFiveMegabyteLimit() {
+        // Each ⇧⌘A picks a 9 MB and a 12 MB file: the first pick fits (21 MB), the second is refused.
+        launch(environment: ["AEOLET_MOCK_FILES": "Survey.mov:12000000,Drone footage.mov:9000000"])
+        signInAndWaitForInbox()
+        app.typeKey("n", modifierFlags: .command)
+        waitForCompose()
+        var start = logPosition
+        app.typeKey("a", modifierFlags: [.command, .shift])
+        waitForLog("ATTACH file=Drone footage.mov bytes=9000000", after: start)
+        XCTAssertTrue(element("attachments-total", in: compose).waitForExistence(timeout: 5))
+        XCTAssertEqual(element("attachments-total", in: compose).label, "Attachments total 21 MB of 25 MB")
+
+        start = logPosition
+        app.typeKey("a", modifierFlags: [.command, .shift])
+        let refused = waitForLog("REFUSED", after: start)
+        XCTAssertTrue(refused.contains("2 files are too large"), refused)
+        XCTAssertTrue(refused.contains("4 MB left"), refused)
+        noLog("ATTACH file=", after: start)
+        clickDialogButton("OK")
+    }
 }

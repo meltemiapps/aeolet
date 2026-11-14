@@ -28,12 +28,14 @@ class AeoletUITestCase: XCTestCase {
     // MARK: Launching
 
     @discardableResult
-    func launch(reset: Bool = true, fault: String? = nil, animations: Bool = false) -> XCUIApplication {
+    func launch(reset: Bool = true, fault: String? = nil, animations: Bool = false,
+                arguments: [String] = [], environment: [String: String] = [:]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-AeoletMockGmail"]
+        app.launchArguments = ["-AeoletMockGmail"] + arguments
         if reset { app.launchArguments.append("-AeoletResetState") }
         if !animations { app.launchArguments.append("-AeoletDisableAnimations") }
         if let fault { app.launchEnvironment["AEOLET_MOCK_FAULT"] = fault }
+        app.launchEnvironment.merge(environment) { _, new in new }
         app.launch()
         self.app = app
         return app
@@ -266,6 +268,19 @@ class AeoletUITestCase: XCTestCase {
             while Date() < deadline && app.keyboards.count > 0 { RunLoop.current.run(until: Date().addingTimeInterval(0.25)) }
         }
         waitUntil(2, "the keyboard to go away", file: file, line: line) { app.keyboards.count == 0 }
+    }
+
+    /// Picks "Photo Library" or "Files" from Compose's Attach choices. In mock runs these pick fixtures
+    /// unless the app was launched with -AeoletRealPickers.
+    func attach(_ source: String, file: StaticString = #filePath, line: UInt = #line) {
+        hideKeyboard(file: file, line: line)
+        let menu = app.buttons["Attach"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 10), "No Attach menu", file: file, line: line)
+        for _ in 0..<3 where !menu.isHittable { app.swipeUp(velocity: .slow) }
+        menu.tap()
+        let item = app.buttons[source]
+        XCTAssertTrue(item.waitForExistence(timeout: 5), "No \(source) in the Attach choices", file: file, line: line)
+        item.tap()
     }
 
     /// Taps by position: on older iOS, menus such as Compose's Close can't be reached through accessibility.

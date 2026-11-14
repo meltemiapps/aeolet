@@ -7,7 +7,10 @@ import UniformTypeIdentifiers
 /// Dropped text is still inserted as text.
 struct ComposeBodyEditor: NSViewRepresentable {
     @Binding var text: String
-    let onFile: (Data, String) -> Void
+    /// Dropped files and received file promises; the caller checks sizes before reading them.
+    let onFiles: ([URL]) -> Void
+    /// Dropped attachment data that has no file.
+    let onData: (Data, String) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -32,7 +35,8 @@ struct ComposeBodyEditor: NSViewRepresentable {
         view.drawsBackground = false
         view.string = text
         view.delegate = context.coordinator
-        view.onFile = { onFile($0, $1) }
+        view.onFiles = onFiles
+        view.onData = onData
         view.setAccessibilityIdentifier("compose-body")
         view.setAccessibilityLabel("Message body")
         scroll.documentView = view
@@ -42,7 +46,8 @@ struct ComposeBodyEditor: NSViewRepresentable {
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         context.coordinator.parent = self
         guard let view = scroll.documentView as? DropTextView else { return }
-        view.onFile = { onFile($0, $1) }
+        view.onFiles = onFiles
+        view.onData = onData
         if view.string != text { view.string = text }
     }
 
@@ -58,7 +63,8 @@ struct ComposeBodyEditor: NSViewRepresentable {
 }
 
 final class DropTextView: NSTextView {
-    var onFile: ((Data, String) -> Void)?
+    var onFiles: (([URL]) -> Void)?
+    var onData: ((Data, String) -> Void)?
 
     private static let fileTypes: [NSPasteboard.PasteboardType] =
         [.fileURL] + NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) }
@@ -98,7 +104,7 @@ final class DropTextView: NSTextView {
         guard carriesFiles(info) else { return super.performDragOperation(info) }
         let pasteboard = info.draggingPasteboard
         if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
-            for url in urls { deliver(url) }
+            onFiles?(urls)
             return true
         }
         if let promises = pasteboard.readObjects(forClasses: [NSFilePromiseReceiver.self], options: nil) as? [NSFilePromiseReceiver],
@@ -108,7 +114,7 @@ final class DropTextView: NSTextView {
             for promise in promises {
                 promise.receivePromisedFiles(atDestination: folder, options: [:], operationQueue: .main) { [weak self] url, error in
                     guard error == nil else { return }
-                    self?.deliver(url)
+                    self?.onFiles?([url])
                     try? FileManager.default.removeItem(at: url)
                 }
             }
@@ -116,18 +122,9 @@ final class DropTextView: NSTextView {
         }
         if let type = Self.dataType(in: pasteboard), let data = pasteboard.data(forType: type) {
             let ext = UTType(type.rawValue)?.preferredFilenameExtension ?? "dat"
-            onFile?(data, "Attachment.\(ext)")
+            onData?(data, "Attachment.\(ext)")
             return true
         }
         return false
-    }
-
-    private func deliver(_ url: URL) {
-        let scoped = url.startAccessingSecurityScopedResource()
-        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        var isFolder: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isFolder), !isFolder.boolValue,
-              let data = try? Data(contentsOf: url) else { return }
-        onFile?(data, url.lastPathComponent)
     }
 }

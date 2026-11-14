@@ -125,6 +125,8 @@ private struct MessageCard: View {
     @State private var allowRemote = false
     @State private var preview: URL?
     @State private var attachmentError: String?
+    /// Temporary copies made for Quick Look, Save to Files and the share sheet, deleted when the card goes away.
+    @State private var files: [UUID: URL] = [:]
 
     private var isEncrypted: Bool { message.pgp == .locked || message.wasEncrypted }
 
@@ -156,7 +158,8 @@ private struct MessageCard: View {
         .padding(.horizontal, 10)
         .quickLookPreview($preview)
         .onDisappear {
-            if let preview { try? FileManager.default.removeItem(at: preview) }
+            for url in files.values { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            files = [:]
         }
     }
 
@@ -228,10 +231,21 @@ private struct MessageCard: View {
     @ViewBuilder
     private var attachments: some View {
         ForEach(message.body.attachments) { item in
-            Button { Task { await open(item) } } label: {
-                Label("\(item.filename) · \(ByteCountFormatter.string(fromByteCount: Int64(item.size), countStyle: .file))", systemImage: "paperclip")
-                    .font(.footnote)
-                    .lineLimit(1)
+            HStack(spacing: 12) {
+                Button { Task { await perform(.preview, item) } } label: {
+                    Label("\(item.filename) · \(AttachmentLimit.format(item.size))", systemImage: "paperclip")
+                        .font(.footnote)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Menu {
+                    Button("Preview", systemImage: "eye") { Task { await perform(.preview, item) } }
+                    Button("Save to Files", systemImage: "folder") { Task { await perform(.save, item) } }
+                    Button("Share", systemImage: "square.and.arrow.up") { Task { await perform(.share, item) } }
+                } label: {
+                    Image(systemName: "ellipsis.circle").imageScale(.large).padding(.vertical, 2)
+                }
+                .accessibilityLabel("Options for \(item.filename)")
             }
         }
         if let attachmentError {
@@ -249,13 +263,41 @@ private struct MessageCard: View {
         .disabled(message.pgp == .locked)
     }
 
-    private func open(_ item: MailAttachment) async {
-        // Quick Look needs a file on disk. Decrypted content must never be written to disk,
-        // so attachments of encrypted messages are not previewed.
+    private enum AttachmentAction { case preview, save, share }
+
+    private func perform(_ action: AttachmentAction, _ item: MailAttachment) async {
+        // Quick Look, Files and the share sheet all need a file on disk. Decrypted content must never be
+        // written to disk, so attachments of encrypted messages are not handed over.
         guard !message.wasEncrypted else {
-            attachmentError = "Attachments of encrypted messages can't be previewed, because previewing would write the decrypted file to storage."
+            attachmentError = "Attachments of encrypted messages can't be previewed, saved or shared, because that would write the decrypted file to storage."
             return
         }
+        attachmentError = nil
+        guard let url = await file(for: item) else {
+            attachmentError = "Could not open \(item.filename)."
+            return
+        }
+        switch action {
+        case .preview:
+            preview = url
+        case .save:
+            FileHandoff.saveToFiles(url) { saved in
+                #if DEBUG
+                MockGmail.note("EXPORT file=\(item.filename) saved=\(saved)")
+                #endif
+            }
+        case .share:
+            FileHandoff.share(url) { completed in
+                #if DEBUG
+                MockGmail.note("SHARE file=\(item.filename) completed=\(completed)")
+                #endif
+            }
+        }
+    }
+
+    /// Downloads the attachment once and keeps it in a protected temporary file while the message is open.
+    private func file(for item: MailAttachment) async -> URL? {
+        if let existing = files[item.id], FileManager.default.fileExists(atPath: existing.path) { return existing }
         do {
             let data = try await model.attachmentData(item)
             let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -263,9 +305,10 @@ private struct MessageCard: View {
             let safeName = (item.filename as NSString).lastPathComponent
             let url = folder.appendingPathComponent(safeName.isEmpty ? "attachment" : safeName)
             try data.write(to: url, options: [.atomic, .completeFileProtection])
-            preview = url
+            files[item.id] = url
+            return url
         } catch {
-            attachmentError = "Could not open \(item.filename)."
+            return nil
         }
     }
 }

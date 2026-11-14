@@ -19,7 +19,7 @@ final class ScreenshotUITests: AeoletUITestCase {
         type("Sofia Papadaki <sofia@example.org>", into: app.textFields["To"])
         type("Weekend in Hydra", into: app.textFields["Subject"])
         type("Hi Sofia,\n\nThe early ferry leaves Piraeus at 8:00. Shall we meet at the gate?\n\nElena", into: app.textViews.firstMatch)
-        app.buttons["Attach file"].tap()
+        attach("Files")
         if app.keyboards.count == 0 { app.textViews.firstMatch.tap() }
         hideKeyboard()
         RunLoop.current.run(until: Date().addingTimeInterval(1))

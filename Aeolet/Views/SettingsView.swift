@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject private var pgp: PGPStore
     @Environment(\.dismiss) private var dismiss
     @State private var accountToRemove: String?
+    @AppStorage(ComposeModel.keepPhotoOriginalsKey) private var keepPhotoOriginals = false
 
     var body: some View {
         NavigationStack {
@@ -15,6 +16,15 @@ struct SettingsView: View {
                     Text("Privacy")
                 } footer: {
                     Text("Locks Aeolet whenever it leaves the foreground. Remote images are always blocked until you ask for them.")
+                }
+                Section {
+                    Toggle("Keep photo originals", isOn: $keepPhotoOriginals)
+                } header: {
+                    Text("Attachments")
+                } footer: {
+                    Text(keepPhotoOriginals
+                         ? "Photos are sent exactly as they are in your library, including HEIC format and where they were taken."
+                         : "Photos are sent as JPEG, with the location they were taken removed.")
                 }
                 Section {
                     Toggle("Enable PGP", isOn: Binding(get: { pgp.isEnabled }, set: { pgp.setEnabled($0) }))

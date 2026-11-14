@@ -31,11 +31,12 @@ class MacUITestCase: XCTestCase {
     // MARK: Launching
 
     @discardableResult
-    func launch(reset: Bool = true, fault: String? = nil, extra: [String] = []) -> XCUIApplication {
+    func launch(reset: Bool = true, fault: String? = nil, extra: [String] = [], environment: [String: String] = [:]) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-AeoletMockGmail", "-ApplePersistenceIgnoreState", "YES"] + extra
         if reset { app.launchArguments.append("-AeoletResetState") }
         if let fault { app.launchEnvironment["AEOLET_MOCK_FAULT"] = fault }
+        app.launchEnvironment.merge(environment) { $1 }
         app.launch()
         app.activate()
         self.app = app

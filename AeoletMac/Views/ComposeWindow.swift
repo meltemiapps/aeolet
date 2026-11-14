@@ -74,7 +74,7 @@ struct MacComposeView: View {
 
             Divider()
 
-            ComposeBodyEditor(text: $model.body) { data, filename in addData(data, filename: filename) }
+            ComposeBodyEditor(text: $model.body, onFiles: { urls in add(urls) }, onData: { data, filename in addData(data, filename: filename) })
                 .padding(.horizontal, 4)
 
             if !model.attachments.isEmpty {
@@ -85,8 +85,9 @@ struct MacComposeView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "paperclip")
                                 Text(item.filename).lineLimit(1)
-                                Text(ByteCountFormatter.string(fromByteCount: Int64(item.data.count), countStyle: .file))
+                                Text(AttachmentLimit.format(item.data.count))
                                     .foregroundStyle(.secondary)
+                                    .monospacedDigit()
                                 Button {
                                     model.attachments.removeAll { $0.id == item.id }
                                 } label: {
@@ -106,6 +107,16 @@ struct MacComposeView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                 }
+                // The running total against Gmail's 25 MB limit, as on iOS.
+                Text("\(AttachmentLimit.format(model.attachmentsTotal)) of \(AttachmentLimit.format(AttachmentLimit.maxTotalBytes))")
+                    .font(.footnote)
+                    .monospacedDigit()
+                    .foregroundStyle(model.isOverAttachmentLimit ? .red : .secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 6)
+                    .accessibilityIdentifier("attachments-total")
+                    .accessibilityLabel("Attachments total \(AttachmentLimit.format(model.attachmentsTotal)) of \(AttachmentLimit.format(AttachmentLimit.maxTotalBytes))")
             }
         }
         .frame(minWidth: 520, minHeight: 420)
@@ -155,6 +166,14 @@ struct MacComposeView: View {
         })
         .fileImporter(isPresented: $showImporter, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
             if case let .success(urls) = result { add(urls) }
+        }
+        .alert("Attachments", isPresented: Binding(
+            get: { model.attachmentNotice != nil },
+            set: { if !$0 { model.attachmentNotice = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.attachmentNotice ?? "")
         }
         .alert("Could not send", isPresented: Binding(
             get: { model.errorMessage != nil },
@@ -210,9 +229,11 @@ struct MacComposeView: View {
 
     private func attachFile() {
         #if DEBUG
-        // Mock runs attach a fixture instead of opening the system file panel.
+        // Mock runs pick fixture files (AEOLET_MOCK_FILES) instead of opening the system file panel.
         if MockGmail.isActive {
-            model.attachments.append(MockGmail.sampleAttachment)
+            let picked = MockGmail.pickedFiles()
+            add(picked)
+            for url in picked { try? FileManager.default.removeItem(at: url) }
             return
         }
         #endif
@@ -255,28 +276,41 @@ struct MacComposeView: View {
         }
     }
 
+    /// Data dropped without a file (an attachment dragged from a message). Goes through the same 25 MB check as files.
     private func addData(_ data: Data, filename: String) {
         let type = UTType(filenameExtension: (filename as NSString).pathExtension)?.preferredMIMEType ?? "application/octet-stream"
-        model.attachments.append(OutgoingAttachment(filename: filename, mimeType: type, data: data))
-        #if DEBUG
-        if MockGmail.isActive { MockGmailServer.shared.record("ATTACH file=\(filename) bytes=\(data.count)") }
-        #endif
+        let before = model.attachments.count
+        model.add([OutgoingAttachment(filename: filename, mimeType: type, data: data)])
+        logAttached(since: before)
     }
 
+    /// Files from the Open panel, Finder or a drop. The shared importer checks each file's size against the
+    /// 25 MB limit before reading it, as on iOS. Folders are refused.
     private func add(_ urls: [URL]) {
+        var files: [URL] = []
         for url in urls {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             var isFolder: ObjCBool = false
             if FileManager.default.fileExists(atPath: url.path, isDirectory: &isFolder), isFolder.boolValue {
-                model.errorMessage = "\(url.lastPathComponent) is a folder. Compress it first, then attach the archive."
+                model.attachmentNotice = "\u{201C}\(url.lastPathComponent)\u{201D} is a folder. Compress it first, then attach the archive."
                 continue
             }
-            guard let data = try? Data(contentsOf: url) else {
-                model.errorMessage = "Could not read \(url.lastPathComponent)."
-                continue
-            }
-            addData(data, filename: url.lastPathComponent)
+            files.append(url)
         }
+        guard !files.isEmpty else { return }
+        let before = model.attachments.count
+        model.addFiles(files)
+        logAttached(since: before)
+    }
+
+    private func logAttached(since index: Int) {
+        #if DEBUG
+        guard MockGmail.isActive else { return }
+        for item in model.attachments.dropFirst(index) {
+            MockGmailServer.shared.record("ATTACH file=\(item.filename) bytes=\(item.data.count)")
+        }
+        if let notice = model.attachmentNotice { MockGmailServer.shared.record("REFUSED \(notice)") }
+        #endif
     }
 }
