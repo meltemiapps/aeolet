@@ -122,7 +122,7 @@ struct MacComposeView: View {
                     .allowsHitTesting(false)
             }
         }
-        .onDrop(of: [.fileURL], isTargeted: $isDropTarget) { providers in
+        .onDrop(of: [.fileURL, .item], isTargeted: $isDropTarget) { providers in
             receiveDrop(providers)
             return true
         }
@@ -224,13 +224,35 @@ struct MacComposeView: View {
         showImporter = true
     }
 
+    /// Files from Finder arrive as file URLs; attachments dragged from a message (here or in another mail app)
+    /// arrive as files the sender writes on drop.
     private func receiveDrop(_ providers: [NSItemProvider]) {
         for provider in providers {
-            _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                guard let url else { return }
-                Task { @MainActor in add([url]) }
+            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                    guard let url else { return }
+                    Task { @MainActor in add([url]) }
+                }
+                continue
+            }
+            guard let type = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .data) ?? false })
+                    ?? provider.registeredTypeIdentifiers.first else { continue }
+            let name = provider.suggestedName
+            provider.loadFileRepresentation(forTypeIdentifier: type) { url, _ in
+                // The file is only valid inside this callback, so it is read here.
+                guard let url, let data = try? Data(contentsOf: url) else { return }
+                let filename = name.map { ($0 as NSString).pathExtension.isEmpty ? $0 + "." + url.pathExtension : $0 } ?? url.lastPathComponent
+                Task { @MainActor in addData(data, filename: filename) }
             }
         }
+    }
+
+    private func addData(_ data: Data, filename: String) {
+        let type = UTType(filenameExtension: (filename as NSString).pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+        model.attachments.append(OutgoingAttachment(filename: filename, mimeType: type, data: data))
+        #if DEBUG
+        if MockGmail.isActive { MockGmailServer.shared.record("ATTACH file=\(filename) bytes=\(data.count)") }
+        #endif
     }
 
     private func add(_ urls: [URL]) {
@@ -246,11 +268,7 @@ struct MacComposeView: View {
                 model.errorMessage = "Could not read \(url.lastPathComponent)."
                 continue
             }
-            let type = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
-            model.attachments.append(OutgoingAttachment(filename: url.lastPathComponent, mimeType: type, data: data))
-            #if DEBUG
-            if MockGmail.isActive { MockGmailServer.shared.record("ATTACH file=\(url.lastPathComponent) bytes=\(data.count)") }
-            #endif
+            addData(data, filename: url.lastPathComponent)
         }
     }
 }
