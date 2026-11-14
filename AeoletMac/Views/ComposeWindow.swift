@@ -74,13 +74,8 @@ struct MacComposeView: View {
 
             Divider()
 
-            TextEditor(text: $model.body)
-                .font(.body)
-                .scrollContentBackground(.hidden)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .accessibilityLabel("Message body")
-                .accessibilityIdentifier("compose-body")
+            ComposeBodyEditor(text: $model.body) { data, filename in addData(data, filename: filename) }
+                .padding(.horizontal, 4)
 
             if !model.attachments.isEmpty {
                 Divider()
