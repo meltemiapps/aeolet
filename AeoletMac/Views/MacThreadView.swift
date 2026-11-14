@@ -355,6 +355,17 @@ private struct AttachmentChip: View {
         let type = UTType(mimeType: item.mimeType) ?? UTType(filenameExtension: (item.filename as NSString).pathExtension) ?? .data
         let item = self.item
         let model = self.model
+        // Apps (including Aeolet's own compose window) can take the bytes; Finder takes the file.
+        provider.registerDataRepresentation(forTypeIdentifier: type.identifier, visibility: .all) { completion in
+            Task { @MainActor in
+                do {
+                    completion(try await model.attachmentData(item), nil)
+                } catch {
+                    completion(nil, error)
+                }
+            }
+            return nil
+        }
         provider.registerFileRepresentation(forTypeIdentifier: type.identifier, fileOptions: [], visibility: .all) { completion in
             Task { @MainActor in
                 do {

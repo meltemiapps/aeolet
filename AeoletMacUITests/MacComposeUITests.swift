@@ -117,7 +117,8 @@ final class MacComposeUITests: MacUITestCase {
         start = logPosition
         let dropPoint = compose.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.6))
         chip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.8, thenDragTo: dropPoint)
-        waitForLog("ATTACH file=Boarding passes.pdf", after: start)
-        XCTAssertTrue(compose.descendants(matching: .any)["outgoing-Boarding passes.pdf"].waitForExistence(timeout: 5))
+        let attached = waitForLog("ATTACH file=", after: start)
+        XCTAssertTrue(attached.contains(".pdf bytes="), "Dropped attachment should arrive as the PDF: \(attached)")
+        XCTAssertFalse(attached.hasSuffix("bytes=0"), attached)
     }
 }

@@ -228,6 +228,11 @@ struct MacComposeView: View {
     /// arrive as files the sender writes on drop.
     private func receiveDrop(_ providers: [NSItemProvider]) {
         for provider in providers {
+            #if DEBUG
+            if MockGmail.isActive {
+                MockGmailServer.shared.record("DROP types=\(provider.registeredTypeIdentifiers.joined(separator: ",")) name=\(provider.suggestedName ?? "-")")
+            }
+            #endif
             if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
                 _ = provider.loadObject(ofClass: URL.self) { url, _ in
                     guard let url else { return }
@@ -238,6 +243,14 @@ struct MacComposeView: View {
             guard let type = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .data) ?? false })
                     ?? provider.registeredTypeIdentifiers.first else { continue }
             let name = provider.suggestedName
+            let fallbackName = "Attachment." + (UTType(type)?.preferredFilenameExtension ?? "dat")
+            if UTType(type)?.conforms(to: .data) == true {
+                _ = provider.loadDataRepresentation(forTypeIdentifier: type) { data, _ in
+                    guard let data else { return }
+                    Task { @MainActor in addData(data, filename: name ?? fallbackName) }
+                }
+                continue
+            }
             provider.loadFileRepresentation(forTypeIdentifier: type) { url, _ in
                 // The file is only valid inside this callback, so it is read here.
                 guard let url, let data = try? Data(contentsOf: url) else { return }
