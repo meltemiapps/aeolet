@@ -114,6 +114,8 @@ final class MacComposeUITests: MacUITestCase {
         let titleBar = compose.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.01))
         let screenRight = XCUIScreen.main.screenshot().image.size.width
         titleBar.press(forDuration: 0.3, thenDragTo: titleBar.withOffset(CGVector(dx: screenRight - 40 - compose.frame.maxX, dy: 0)))
+        // The first click on an inactive window only activates it, so bring the viewer forward first.
+        anyText(containing: "Your ferry tickets: Piraeus to Naxos").click()
         start = logPosition
         let dropPoint = compose.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.6))
         chip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.8, thenDragTo: dropPoint)
