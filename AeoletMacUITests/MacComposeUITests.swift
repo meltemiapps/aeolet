@@ -135,8 +135,11 @@ final class MacComposeUITests: MacUITestCase {
         var start = logPosition
         app.typeKey("a", modifierFlags: [.command, .shift])
         waitForLog("ATTACH file=Drone footage.mov bytes=9000000", after: start)
-        XCTAssertTrue(element("attachments-total", in: compose).waitForExistence(timeout: 5))
-        XCTAssertEqual(element("attachments-total", in: compose).label, "Attachments total 21 MB of 25 MB")
+        let total = element("attachments-total", in: compose)
+        XCTAssertTrue(total.waitForExistence(timeout: 5))
+        // macOS reports a text's words as its value or its label, depending on the version.
+        let shown = "\(total.label) \(total.value as? String ?? "")"
+        XCTAssertTrue(shown.contains("21 MB of 25 MB"), "Running total: \(shown)")
 
         start = logPosition
         app.typeKey("a", modifierFlags: [.command, .shift])
