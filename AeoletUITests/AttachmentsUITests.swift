@@ -170,12 +170,13 @@ final class AttachmentsUITests: AeoletUITestCase {
         let sheet = app.otherElements["ActivityListView"]
         XCTAssertTrue(sheet.waitForExistence(timeout: 20), "Share sheet did not open")
         XCTAssertTrue(anyText(containing: "Boarding passes").exists, "Share sheet is not sharing the attachment")
-        // Close it without sharing: tap outside where it's a popover, otherwise swipe it down.
-        let outside = app.otherElements["PopoverDismissRegion"]
-        if outside.exists {
-            outside.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
-        } else {
-            sheet.swipeDown(velocity: .fast)
+        // Close it without sharing by tapping above it, by screen position: the dimmed area or popover
+        // dismiss region is replaced as the sheet settles, so it can't be tapped as an element.
+        // If that misses (a full-height sheet on older iOS), swipe it down.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
+        for _ in 0..<2 where sheet.waitForExistence(timeout: 2) {
+            sheet.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.05))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
         }
         waitForLog("SHARE file=Boarding passes.pdf completed=false", after: start)
     }
@@ -192,7 +193,8 @@ final class AttachmentsUITests: AeoletUITestCase {
     /// Taps until the button goes away; a tap can land while a system sheet is still settling.
     private func tapUntilGone(_ button: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
         for _ in 0..<4 where button.exists {
-            if button.isHittable { button.tap() }
+            // System pickers on older iOS report their buttons as not hittable, so fall back to tapping by position.
+            if button.isHittable { button.tap() } else { button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
             let deadline = Date().addingTimeInterval(3)
             while Date() < deadline && button.exists { RunLoop.current.run(until: Date().addingTimeInterval(0.25)) }
         }
@@ -214,9 +216,11 @@ final class AttachmentsUITests: AeoletUITestCase {
         XCTAssertFalse(app.alerts.firstMatch.exists, "A permission prompt appeared")
         let photos = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Photo,'"))
         if photos.count >= 2 {
-            photos.element(boundBy: 0).tap()
-            photos.element(boundBy: 1).tap()
-            let done = app.buttons["Done"]
+            // Before iOS 26 the picker's photos are not reported as hittable, so they are tapped by position.
+            photos.element(boundBy: 0).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            photos.element(boundBy: 1).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            // "Done" on iOS 26 and later, "Add" before.
+            let done = app.buttons.matching(NSPredicate(format: "label IN {'Done', 'Add'}")).firstMatch
             waitUntil(10, "the picker's Done button to enable") { done.isEnabled }
             tapUntilGone(done)
             // Sample photos are large, so check what reached the server rather than rows that may be off screen.
