@@ -108,11 +108,15 @@ final class MacComposeUITests: MacUITestCase {
         app.menuItems["Save Attachment…"].click()
         waitForLog("SAVE attachment=Boarding passes.pdf", after: start)
 
-        // Drag the attachment into a new message.
+        // Drag the attachment into a new message, with the message window moved clear of the attachment.
         app.typeKey("n", modifierFlags: .command)
         waitForCompose()
+        let titleBar = compose.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.01))
+        let screenRight = XCUIScreen.main.screenshot().image.size.width
+        titleBar.press(forDuration: 0.3, thenDragTo: titleBar.withOffset(CGVector(dx: screenRight - 40 - compose.frame.maxX, dy: 0)))
         start = logPosition
-        chip.press(forDuration: 0.6, thenDragTo: compose.textViews["compose-body"])
+        let dropPoint = compose.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.6))
+        chip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.8, thenDragTo: dropPoint)
         waitForLog("ATTACH file=Boarding passes.pdf", after: start)
         XCTAssertTrue(compose.descendants(matching: .any)["outgoing-Boarding passes.pdf"].waitForExistence(timeout: 5))
     }

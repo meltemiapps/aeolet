@@ -180,10 +180,13 @@ struct MacGenerateKeyView: View {
             Form {
                 LabeledContent("Email", value: account)
                 TextField("Your name", text: $name)
+                    .accessibilityIdentifier("pgp-name")
                 SecureField("Passphrase", text: $passphrase, prompt: Text("12 characters or more"))
                     .textContentType(.oneTimeCode)
+                    .accessibilityIdentifier("pgp-passphrase")
                 SecureField("Repeat passphrase", text: $confirmation)
                     .textContentType(.oneTimeCode)
+                    .accessibilityIdentifier("pgp-repeat")
             }
             Text("There is no reset. If you forget the passphrase, mail encrypted to this key is unreadable.")
                 .font(.callout).foregroundStyle(.secondary)
@@ -198,6 +201,7 @@ struct MacGenerateKeyView: View {
                     ProgressView().controlSize(.small)
                 } else {
                     Button("Create") { Task { await create() } }
+                        .accessibilityIdentifier("pgp-create")
                         .keyboardShortcut(.defaultAction)
                         .disabled(!isValid)
                 }

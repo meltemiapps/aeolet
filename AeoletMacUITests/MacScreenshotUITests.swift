@@ -57,13 +57,13 @@ final class MacScreenshotUITests: MacUITestCase {
             let generate = settings.buttons["Generate a New Key…"].firstMatch
             XCTAssertTrue(generate.waitForExistence(timeout: 10), "No Generate button for \(account)")
             generate.click()
-            let sheet = settings.sheets.firstMatch
-            XCTAssertTrue(sheet.waitForExistence(timeout: 10))
-            type(name, into: sheet.textFields["Your name"])
-            type(Self.passphrase, into: sheet.secureTextFields["Passphrase"])
-            type(Self.passphrase, into: sheet.secureTextFields["Repeat passphrase"])
-            sheet.buttons["Create"].click()
-            waitUntil(90, "key generation for \(account)") { !sheet.exists }
+            let nameField = element("pgp-name")
+            XCTAssertTrue(nameField.waitForExistence(timeout: 10), "No key sheet")
+            type(name, into: nameField)
+            type(Self.passphrase, into: element("pgp-passphrase"))
+            type(Self.passphrase, into: element("pgp-repeat"))
+            element("pgp-create").click()
+            waitUntil(90, "key generation for \(account)") { !element("pgp-name").exists }
         }
         capture("4-Settings")
         settings.typeKey("w", modifierFlags: .command)
