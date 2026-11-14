@@ -43,7 +43,7 @@ jobs:
           path: TestResults.xcresult
           if-no-files-found: ignore
   mac:
-    runs-on: macos-15
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v5
       - name: Mac unit and UI tests (UI tests run against the in-app mock Gmail server)

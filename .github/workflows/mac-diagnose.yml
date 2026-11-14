@@ -2,7 +2,7 @@ name: Mac launch diagnostic (temporary)
 on: [push]
 jobs:
   diagnose:
-    runs-on: macos-15
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v5
       - run: |
