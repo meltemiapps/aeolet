@@ -304,7 +304,8 @@ private struct AttachmentChip: View {
         .padding(.vertical, 5)
         .background(Color(nsColor: .quaternaryLabelColor).opacity(0.5), in: Capsule())
         .contentShape(Capsule())
-        .onTapGesture(count: 2) { onPreview() }
+        // A plain tap gesture would take the mouse-down that starts a drag, so double-click runs alongside it.
+        .simultaneousGesture(TapGesture(count: 2).onEnded { onPreview() })
         .onDrag { dragProvider() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("attachment-\(item.filename)")
@@ -348,6 +349,12 @@ private struct AttachmentChip: View {
     private func dragProvider() -> NSItemProvider {
         let provider = NSItemProvider()
         provider.suggestedName = AttachmentFiles.safeName(item.filename)
+        #if DEBUG
+        if MockGmail.isActive {
+            MockGmailServer.shared.record("DRAG attachment=\(item.filename)")
+            NSLog("Aeolet mock: drag started for %@", item.filename)
+        }
+        #endif
         guard !encrypted else {
             onError(AttachmentFiles.encryptedRefusal)
             return provider
