@@ -8,6 +8,7 @@ struct MailCommands: Commands {
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
+        let _ = WindowOpener.remember(openWindow)
         CommandGroup(replacing: .newItem) {
             Button("New Message") { newMessage() }
                 .keyboardShortcut("n")
@@ -73,6 +74,23 @@ struct MailCommands: Commands {
     private func newMessage() {
         guard let account = window?.account ?? app.currentAccount ?? app.accounts.first else { return }
         openWindow(id: WindowID.compose, value: ComposeRegistry.register(.new, account: account))
+    }
+}
+
+/// Makes sure a viewer window exists after launch. SwiftUI opens the first window when the system sends the
+/// app its "open" event; a launch without that event (Open at Login, some automated launches) would otherwise
+/// leave Aeolet running with only a menu bar.
+@MainActor
+enum WindowOpener {
+    private static var open: OpenWindowAction?
+
+    static func remember(_ action: OpenWindowAction) {
+        open = action
+    }
+
+    static func ensureViewerWindow() {
+        let hasWindow = NSApp.windows.contains { $0.isVisible && $0.canBecomeMain && !($0 is NSPanel) }
+        if !hasWindow { open?(id: WindowID.main) }
     }
 }
 

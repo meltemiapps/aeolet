@@ -65,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { WindowOpener.ensureViewerWindow() }
     }
 
     /// Wires lock and watcher to the shared models once the first window exists.
