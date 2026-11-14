@@ -28,6 +28,12 @@ final class ComposeModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var needsPassphrase = false
     @Published var confirmPlaintextReply = false
+    /// Set when attachments are refused for size, or photos or files can't be read.
+    @Published var attachmentNotice: String?
+    @Published var isAddingPhotos = false
+
+    /// Settings > Attachments. Off by default: photos are sent as JPEG without location.
+    static let keepPhotoOriginalsKey = "keepPhotoOriginals"
 
     private var plaintextReplyConfirmed = false
 
@@ -88,10 +94,50 @@ final class ComposeModel: ObservableObject {
                 case let .local(local): data = local
                 case let .gmail(messageID, attachmentID): data = try await client.attachment(messageID: messageID, attachmentID: attachmentID)
                 }
-                attachments.append(OutgoingAttachment(filename: item.filename, mimeType: item.mimeType, data: data))
+                add([OutgoingAttachment(filename: item.filename, mimeType: item.mimeType, data: data)])
             } catch {
                 errorMessage = "Could not include \(item.filename)."
             }
+        }
+    }
+
+    // MARK: Attachments
+
+    var attachmentsTotal: Int { attachments.reduce(0) { $0 + $1.data.count } }
+    var isOverAttachmentLimit: Bool { attachmentsTotal > AttachmentLimit.maxTotalBytes }
+
+    /// Adds attachments in order while they fit within Gmail's limit, and explains any it refuses.
+    func add(_ items: [OutgoingAttachment]) {
+        var refused: [String] = []
+        for item in items {
+            if attachmentsTotal + item.data.count > AttachmentLimit.maxTotalBytes {
+                refused.append(item.filename)
+            } else {
+                attachments.append(item)
+            }
+        }
+        if !refused.isEmpty { attachmentNotice = AttachmentLimit.message(refused: refused, currentTotal: attachmentsTotal) }
+    }
+
+    func addPhotos(_ providers: [NSItemProvider]) async {
+        guard !providers.isEmpty else { return }
+        isAddingPhotos = true
+        defer { isAddingPhotos = false }
+        let keep = UserDefaults.standard.bool(forKey: Self.keepPhotoOriginalsKey)
+        let (items, failed) = await PhotoAttachments.load(providers, keepOriginals: keep)
+        add(items)
+        if !failed.isEmpty, attachmentNotice == nil {
+            attachmentNotice = "Could not add \(failed.joined(separator: ", ")). The photo may still be downloading from iCloud; try again in a moment."
+        }
+    }
+
+    func addFiles(_ urls: [URL]) {
+        let result = FileAttachments.load(urls, alreadyAttached: attachmentsTotal)
+        attachments.append(contentsOf: result.attachments)
+        if !result.tooLarge.isEmpty {
+            attachmentNotice = AttachmentLimit.message(refused: result.tooLarge, currentTotal: attachmentsTotal)
+        } else if !result.unreadable.isEmpty {
+            attachmentNotice = "Could not read \(result.unreadable.joined(separator: ", ")). If it is in Google Drive or another cloud provider, check that it has downloaded."
         }
     }
 
@@ -127,9 +173,17 @@ final class ComposeModel: ObservableObject {
     }
 
     /// Returns true when the message has been sent and the sheet can close.
+    private var overLimitMessage: String {
+        "Attachments total \(AttachmentLimit.format(attachmentsTotal)), over Gmail's \(AttachmentLimit.format(AttachmentLimit.maxTotalBytes)) limit. Remove some to send."
+    }
+
     func send() async -> Bool {
         guard !recipients.isEmpty || !bcc.splitAddresses.isEmpty else {
             errorMessage = "Add at least one recipient."
+            return false
+        }
+        guard !isOverAttachmentLimit else {
+            errorMessage = overLimitMessage
             return false
         }
         if encrypt {
@@ -177,6 +231,10 @@ final class ComposeModel: ObservableObject {
 
     func saveDraft() async -> Bool {
         guard canSaveDraft else { return false }
+        guard !isOverAttachmentLimit else {
+            errorMessage = overLimitMessage
+            return false
+        }
         isWorking = true
         defer { isWorking = false }
         let wasSigning = sign

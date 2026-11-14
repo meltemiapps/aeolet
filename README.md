@@ -5,6 +5,8 @@ An open-source, native Gmail client for iPhone and iPad, in the spirit of K-9 Ma
 ## What it does
 
 - Native SwiftUI client on the Gmail REST API: threads, labels, search, read and unread, star, archive, bin, spam, attachments, reply, reply all, forward, drafts.
+- Attach photos from the Photo Library (Apple's picker, so no access to your library is requested) and files from the Files picker, which includes iCloud Drive, Google Drive and any other installed provider. Photos go out as JPEG with their location removed unless you turn on Settings > Keep photo originals. Compose shows each attachment's size and keeps the total within Gmail's 25 MB limit.
+- Preview received attachments with Quick Look, save them to Files or pass them on with the share sheet.
 - Several Gmail accounts.
 - Sign-in with OAuth 2.0 and PKCE in Apple's system sign-in sheet. Your password goes to Google only.
 - Refresh tokens in the iOS Keychain, this device only, never iCloud. Access tokens stay in memory.
@@ -57,7 +59,7 @@ The cryptography is [OpenPGP.js](https://github.com/openpgpjs/openpgpjs), run in
 ## Tests
 
 - `AeoletTests`: OAuth PKCE vectors, MIME building and parsing, header-injection protection, error wording, the remote-content policy, and an OpenPGP round trip through the app's own engine.
-- `AeoletUITests`: the whole app driven end to end in the Simulator: sign-in, inbox, search, labels, compose with attachments, reply, reply all, forward, archive, star, read and unread, Bin, two accounts and signing out, remote images, Face ID lock, PGP between two accounts, Google's error responses and offline. They never touch a real Gmail account.
+- `AeoletUITests`: the whole app driven end to end in the Simulator: sign-in, inbox, search, labels, compose with attachments (photos converted and stripped of location, any file type, the 25 MB limit, the real system pickers), previewing, saving and sharing received attachments, reply, reply all, forward, archive, star, read and unread, Bin, two accounts and signing out, remote images, Face ID lock, PGP between two accounts, Google's error responses and offline. They never touch a real Gmail account.
 - `PGP/js/test`: 24 checks in a real browser engine under the production content policy, including interoperability with GnuPG in both directions.
 - `Scripts/check-release-excludes-mock.sh`: builds Release and fails if any trace of the mock below is in it.
 
@@ -67,7 +69,7 @@ xcodebuild test -project Aeolet.xcodeproj -scheme Aeolet -destination "platform=
 
 ### Mock Gmail
 
-Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install, and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. None of it is compiled into Release builds.
+Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install, and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. Compose's Photo Library and Files pick fixtures, chosen with `AEOLET_MOCK_PHOTOS` and `AEOLET_MOCK_FILES`, unless `-AeoletRealPickers` opens Apple's pickers. None of it is compiled into Release builds.
 
 ## Security
 

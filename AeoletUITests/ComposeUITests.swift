@@ -17,7 +17,7 @@ final class ComposeUITests: AeoletUITestCase {
         type("sofia@example.org", into: field("To"))
         type("Weekend plans", into: field("Subject"))
         type("Shall we take the early ferry on Saturday?", into: app.textViews.firstMatch)
-        app.buttons["Attach file"].tap()
+        attach("Files")
         XCTAssertTrue(anyText(containing: "Itinerary.pdf").waitForExistence(timeout: 5))
         let start = logPosition
         send()

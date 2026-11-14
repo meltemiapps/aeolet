@@ -8,7 +8,7 @@ GOOGLE_URL_SCHEME = com.googleusercontent.apps.$(GOOGLE_CLIENT_PREFIX)
 DEVELOPMENT_TEAM = 6Q7HCLY6C6
 PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet
 
-MARKETING_VERSION = 1.0
+MARKETING_VERSION = 1.1
 CURRENT_PROJECT_VERSION = 1
 
 // Shown under Settings > About once set. Keep the $() so the slashes are not read as a comment.

@@ -1,4 +1,5 @@
 #if DEBUG
+import ImageIO
 import Foundation
 import UIKit
 
@@ -222,6 +223,46 @@ enum MockGmailFixtures {
     }
 
     // MARK: Generated attachments
+
+    /// A 240×160 HEIC photo with GPS coordinates (Hydra), made with ImageIO, for the photo picker fixtures.
+    static let heicWithLocation = Data(base64Encoded: """
+    AAAAJGZ0eXBoZWljAAAAAG1pZjFNaVBybWlhZk1pSEJoZWljAAACBm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAHBpY3QAAAAAAAAA
+    AAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAADnBpdG0AAAAAAAEAAABhaWluZgAAAAAAAwAAABVp
+    bmZlAgAAAAABAABodmMxAAAAABVpbmZlAgAAAQACAABFeGlmAAAAAClpbmZlAgAAAQADAABtaW1lAGFwcGxpY2F0aW9uL3JkZit4
+    bWwAAAAAKGlyZWYAAAAAAAAADmNkc2MAAgABAAEAAAAOY2RzYwADAAEAAQAAAORpcHJwAAAAw2lwY28AAAATY29scm5jbHgAAgAC
+    AAaAAAAADGNsbGkAywBAAAAAFGlzcGUAAAAAAAAA8AAAAKAAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAAb2h2Y0MBA3AAAACw
+    AAAAAAA88AD8/fj4AAALA6AAAQAXQAEMAf//A3AAAAMAsAAAAwAAAwA8cCShAAEAIUIBAQNwAAADALAAAAMAAAMAPKAeIChYh7kW
+    VTcCAgYAgKIAAQAJRAHAY8shAUyQAAAAGWlwbWEAAAAAAAAAAQABBoECAwWGhAAAADppbG9jAAAAAEQAAAMAAQAAAAEAAASFAAAB
+    mQACAAAAAQAAAjoAAADiAAMAAAABAAADHAAAAWkAAAABbWRhdAAAAAAAAAP0AAAABkV4aWYAAE1NACoAAAAIAAQBDwACAAAABgAA
+    AD4BEAACAAAABwAAAESHaQAEAAAAAQAAAEyIJQAEAAAAAQAAAHIAAAAAQXBwbGUAaVBob25lAAAAAZADAAIAAAAUAAAAXgAAAAAy
+    MDI2OjA4OjE0IDE4OjMwOjAwAAAEAAEAAgAAAAJOAAAAAAIABQAAAAMAAACoAAMAAgAAAAJFAAAAAAQABQAAAAMAAADAAAAAAAAA
+    ACUAAAABAAAAFQAAAAEAAAAAAAAAZAAAABcAAAABAAAAHAAAAAEAAASwAAAAZDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6
+    bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8x
+    OTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAg
+    eG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIj4KICAgICAgICAgPHBob3Rvc2hvcDpE
+    YXRlQ3JlYXRlZD4yMDI2LTA4LTE0VDE4OjMwOjAwPC9waG90b3Nob3A6RGF0ZUNyZWF0ZWQ+CiAgICAgIDwvcmRmOkRlc2NyaXB0
+    aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgoAAAGVKAGvlEONKSFc989lbml4+tVu5H5VCWbfGM+TlcIyRXud95BHJdM6
+    upXVMVbquRzEI2aXCOR3vfLXlhqzw9zCUa+t9iaYOml+YtMI53DpSOWYEmqQ2CASbbCYIAAT65RQXnvbA12JZyzOTbLUOnLKPXo4
+    sr0JOBwJqBEQLG40+IHA5uXsTz2Mmq8UMWbqC+P/jQ80VdB0nN+hCkEVSBbohXTn8f5LbCOPgaLpmV1Ylmgu9GPi7lgDd6UjLcdG
+    ET5LSWOjTB7++r+P4OVwJzsgJoXrN5TJuq/EPwyqeRLv2eYKJVSLKe+urV9jjXhSZrMvfax5Mlw9f27TtfNuz8BtzI7v2xzNh2Cu
+    53Zx45IiJ/nX3TQp3IHtikQNHhAvR93ugBmzdrKRpkHQzB4bKphKm6A2fzFMIIMTmGcAAAMAHZUibqFZeCoJX+W4ufr53H5RfCTH
+    zLg6yY4mAfm4XVnS3hd+CBMCnrvrA5F3qsQQvFkD/A0yyt0E/2LswzobK/fcjSUvIG7Yx7BsWcuM8iAAAAMAAAds
+    """, options: .ignoreUnknownCharacters)!
+
+    /// A JPEG photo that carries GPS coordinates and a capture date.
+    static func jpegWithLocation(caption: String) -> Data {
+        let plain = jpeg(caption: caption)
+        guard let source = CGImageSourceCreateWithData(plain as CFData, nil) else { return plain }
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(output, "public.jpeg" as CFString, 1, nil) else { return plain }
+        let properties: [CFString: Any] = [
+            kCGImagePropertyGPSDictionary: [kCGImagePropertyGPSLatitude: 37.35, kCGImagePropertyGPSLatitudeRef: "N",
+                                            kCGImagePropertyGPSLongitude: 23.47, kCGImagePropertyGPSLongitudeRef: "E"],
+            kCGImagePropertyExifDictionary: [kCGImagePropertyExifDateTimeOriginal: "2026:08:14 18:30:00"],
+        ]
+        CGImageDestinationAddImageFromSource(destination, source, 0, properties as CFDictionary)
+        return CGImageDestinationFinalize(destination) ? output as Data : plain
+    }
 
     static func pdf(title: String) -> Data {
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 595, height: 842))

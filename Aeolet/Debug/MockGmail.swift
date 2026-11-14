@@ -9,6 +9,11 @@ import UIKit
 /// - `-AeoletResetState`: wipes Keychain items, private files and preferences before the app starts.
 /// - `-AeoletDisableAnimations`: turns UIKit animations off to make UI tests faster and steadier.
 /// - `AEOLET_MOCK_FAULT`: `401`, `403`, `429`, `500`, `missingField` (applied to the thread list) or `offline` (every request).
+/// - `-AeoletRealPickers`: Compose opens Apple's photo and document pickers instead of picking fixtures.
+/// - `AEOLET_MOCK_PHOTOS`: comma-separated fixture photos the Photo Library picks: `harbour` (HEIC with location),
+///   `terrace` (JPEG with location). Default: both.
+/// - `AEOLET_MOCK_FILES`: comma-separated files the Files picker picks, each a name or `name:bytes` for a filler file
+///   of that size. Default: `Itinerary.pdf`, a generated PDF.
 enum MockGmail {
     static let isActive = ProcessInfo.processInfo.arguments.contains("-AeoletMockGmail")
     static let fault = ProcessInfo.processInfo.environment["AEOLET_MOCK_FAULT"].flatMap { $0.isEmpty ? nil : $0 }
@@ -42,8 +47,56 @@ enum MockGmail {
         return components.url!
     }
 
-    /// A file the compose screen can attach without the system document picker.
-    static let sampleAttachment = OutgoingAttachment(filename: "Itinerary.pdf", mimeType: "application/pdf", data: MockGmailFixtures.pdf(title: "Itinerary"))
+    static var usesPickerFixtures: Bool { isActive && !ProcessInfo.processInfo.arguments.contains("-AeoletRealPickers") }
+
+    /// What the photo picker would hand over, as item providers like PHPickerViewController's.
+    static func pickedPhotos() -> [NSItemProvider] {
+        let names = list("AEOLET_MOCK_PHOTOS") ?? ["harbour", "terrace"]
+        MockGmailServer.shared.record("PICK photos=\(names.joined(separator: ","))")
+        return names.compactMap { name in
+            let fixture: (Data, String)
+            switch name {
+            case "harbour": fixture = (MockGmailFixtures.heicWithLocation, "public.heic")
+            case "terrace": fixture = (MockGmailFixtures.jpegWithLocation(caption: "Terrace"), "public.jpeg")
+            default: return nil
+            }
+            let provider = NSItemProvider(item: fixture.0 as NSData, typeIdentifier: fixture.1)
+            provider.suggestedName = name.capitalized
+            return provider
+        }
+    }
+
+    /// What the document picker would hand over: copies in the temporary folder, which Compose deletes after reading.
+    static func pickedFiles() -> [URL] {
+        let entries = list("AEOLET_MOCK_FILES") ?? ["Itinerary.pdf"]
+        MockGmailServer.shared.record("PICK files=\(entries.joined(separator: ","))")
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("mock-picks-\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return entries.compactMap { entry in
+            let pieces = entry.split(separator: ":", maxSplits: 1).map(String.init)
+            let url = folder.appendingPathComponent(pieces[0])
+            let data: Data
+            if pieces.count == 2, let bytes = Int(pieces[1]) {
+                data = Data(repeating: 0x41, count: bytes)
+            } else if pieces[0].hasSuffix(".pdf") {
+                data = MockGmailFixtures.pdf(title: (pieces[0] as NSString).deletingPathExtension)
+            } else {
+                data = Data("Notes from Aeolet's test fixtures.\n".utf8)
+            }
+            return (try? data.write(to: url)) == nil ? nil : url
+        }
+    }
+
+    private static func list(_ variable: String) -> [String]? {
+        guard let value = ProcessInfo.processInfo.environment[variable], !value.isEmpty else { return nil }
+        return value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+    }
+
+    /// Lets UI tests see what happened outside the server, such as a file saved to Files.
+    static func note(_ line: String) {
+        guard isActive else { return }
+        MockGmailServer.shared.record(line)
+    }
 }
 
 // MARK: - URLProtocol
@@ -389,6 +442,9 @@ final class MockGmailServer: @unchecked Sendable {
         let sent = store(raw: raw, in: mailbox, labels: draft ? ["DRAFT"] : ["SENT"], threadID: requestedThread)
         let summary = Self.summary(of: sent, threadID: requestedThread)
         record("\(draft ? "DRAFT" : "SEND") account=\(mailbox.address) from=\(sent.header("From")) | \(summary)")
+        for (name, type, data) in Self.attachmentDetails(of: sent.entity) {
+            record("ATTACHMENT name=\(name) type=\(type) bytes=\(data.count) location=\(PhotoAttachments.hasLocation(data) ? "yes" : "no")")
+        }
 
         if !draft {
             let recipients = (sent.header("To") + "," + sent.header("Cc") + "," + sent.header("Bcc"))
@@ -418,6 +474,17 @@ final class MockGmailServer: @unchecked Sendable {
         let message = Message(id: nextID("m"), threadID: joined ?? nextID("t"), labels: labels, raw: raw, entity: entity, date: date)
         mailbox.messages.append(message)
         return message
+    }
+
+    static func attachmentDetails(of entity: MIMEEntity) -> [(String, String, Data)] {
+        var out: [(String, String, Data)] = []
+        func walk(_ entity: MIMEEntity) {
+            entity.parts.forEach(walk)
+            let name = filename(of: entity)
+            if entity.parts.isEmpty, !name.isEmpty { out.append((name, entity.contentType, Data(entity.body))) }
+        }
+        walk(entity)
+        return out
     }
 
     static func summary(of message: Message, threadID: String?) -> String {
