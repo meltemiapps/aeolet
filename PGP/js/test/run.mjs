@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import playwright from "playwright";
 const { chromium } = playwright;
 
-const bundle = readFileSync(new URL("../../../Aeolet/Resources/openpgp-bridge.js", import.meta.url), "utf8");
+const bundle = readFileSync(new URL("../../../Shared/Resources/openpgp-bridge.js", import.meta.url), "utf8");
 // Same page contract as PGPEngine.swift: HTTPS origin, strict CSP, bridge injected as a user script.
 const CSP = "default-src 'none'; script-src 'wasm-unsafe-eval'";
 const browser = await chromium.launch();
