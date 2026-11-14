@@ -56,8 +56,8 @@ struct MacComposeView: View {
                 TextField("Subject:", text: $model.subject).accessibilityIdentifier("compose-subject")
                 if model.canUsePGP {
                     HStack(spacing: 20) {
-                        Toggle("Encrypt", isOn: $model.encrypt)
-                        Toggle("Sign", isOn: $model.sign)
+                        Toggle("Encrypt", isOn: $model.encrypt).accessibilityIdentifier("compose-encrypt")
+                        Toggle("Sign", isOn: $model.sign).accessibilityIdentifier("compose-sign")
                     }
                     if model.encrypt {
                         Text("The body and attachments are encrypted. The subject, sender and recipients stay visible to mail servers. Encrypted messages cannot be saved as drafts.")

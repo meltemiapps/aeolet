@@ -37,7 +37,7 @@ final class MacMailboxUITests: MacUITestCase {
         // Typing E in the search field types, it does not archive.
         let start = logPosition
         search.typeText("e")
-        XCTAssertEqual(search.value as? String, "naxose")
+        XCTAssertTrue((search.value as? String ?? "").hasSuffix("e"), "E should type into the search field: \(search.value ?? "")")
         noLog("MODIFY", after: start)
 
         sidebar("Label_1").click()

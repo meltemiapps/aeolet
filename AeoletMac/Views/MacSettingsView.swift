@@ -34,7 +34,9 @@ private struct GeneralSettings: View {
                         Text(minutes == 1 ? "Every minute" : "Every \(minutes) minutes").tag(minutes)
                     }
                 }
+                .accessibilityIdentifier("refresh-interval")
                 Toggle("Open at login", isOn: $openAtLogin)
+                    .accessibilityIdentifier("open-at-login")
                     .onChange(of: openAtLogin) { _, value in
                         do {
                             try LoginItem.set(value)
@@ -51,6 +53,7 @@ private struct GeneralSettings: View {
             }
             Section {
                 Toggle("Require Touch ID or password", isOn: $app.requireDeviceAuth)
+                    .accessibilityIdentifier("require-unlock")
             } header: {
                 Text("Privacy")
             } footer: {
@@ -127,6 +130,7 @@ private struct EncryptionSettings: View {
             Form {
                 Section {
                     Toggle("Enable PGP", isOn: Binding(get: { pgp.isEnabled }, set: { pgp.setEnabled($0) }))
+                        .accessibilityIdentifier("enable-pgp")
                 } footer: {
                     Text("Optional. Uses standard OpenPGP, so it works with GnuPG, Thunderbird and Proton Mail users.")
                         .foregroundStyle(.secondary)

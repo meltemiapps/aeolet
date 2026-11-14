@@ -98,7 +98,7 @@ final class MacComposeUITests: MacUITestCase {
         launch(extra: ["-AeoletAutoSave"])
         signInAndWaitForInbox()
         select("Your ferry tickets: Piraeus to Naxos")
-        let actions = app.menuButtons["Attachment actions for Boarding passes.pdf"]
+        let actions = element("attachment-actions-Boarding passes.pdf")
         XCTAssertTrue(actions.waitForExistence(timeout: 15))
         let chip = app.staticTexts.matching(NSPredicate(format: "value == %@", "Boarding passes.pdf")).firstMatch
 

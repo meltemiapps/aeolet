@@ -297,6 +297,7 @@ private struct AttachmentChip: View {
             .menuIndicator(.hidden)
             .fixedSize()
             .accessibilityLabel("Attachment actions for \(item.filename)")
+            .accessibilityIdentifier("attachment-actions-\(item.filename)")
         }
         .font(.callout)
         .padding(.horizontal, 8)

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 /// What the sidebar selects: one label of one account.
@@ -74,6 +75,13 @@ final class MailWindowModel: ObservableObject {
         }
     }
 
+    /// Re-publishes the open conversation's changes, so menu items such as Reply enable once it has loaded.
+    private var threadChanges: AnyCancellable?
+
+    private func observe(_ model: ThreadModel?) {
+        threadChanges = model?.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+    }
+
     var openWindow: OpenWindowAction?
     /// For a window that shows a single conversation: closes it once the conversation is archived or binned.
     var closeWindow: (() -> Void)?
@@ -121,10 +129,12 @@ final class MailWindowModel: ObservableObject {
     private func openSelectedThread() {
         guard let id = selectedThreadID, let account = selection?.account else {
             thread = nil
+            observe(nil)
             return
         }
         let model = ThreadModel(account: account, threadID: id)
         thread = model
+        observe(model)
         Task {
             await model.load()
             mailbox?.markedRead(id)
@@ -137,6 +147,7 @@ final class MailWindowModel: ObservableObject {
         _ = mailboxModel(for: account)
         let model = ThreadModel(account: account, threadID: threadID)
         thread = model
+        observe(model)
         Task {
             await model.load()
             MailWatcher.shared.updateBadgeSoon()

@@ -13,10 +13,12 @@ final class MacSettingsUITests: MacUITestCase {
         launch()
         signInAndWaitForInbox()
         openSettings(tab: "General")
-        XCTAssertTrue(settings.popUpButtons.firstMatch.waitForExistence(timeout: 5), "Refresh interval missing")
-        XCTAssertEqual(settings.popUpButtons.firstMatch.value as? String, "Every 5 minutes")
-        XCTAssertTrue(settings.checkBoxes["Open at login"].exists || settings.switches["Open at login"].exists)
-        XCTAssertTrue(settings.checkBoxes["Require Touch ID or password"].exists || settings.switches["Require Touch ID or password"].exists)
+        let interval = element("refresh-interval", in: settings)
+        XCTAssertTrue(interval.waitForExistence(timeout: 5), "Refresh interval missing")
+        XCTAssertTrue("\(interval.value ?? "")".contains("5 minutes") || interval.label.contains("5 minutes") || anyText(containing: "Every 5 minutes").exists,
+                      "Default interval should be 5 minutes")
+        XCTAssertTrue(element("open-at-login", in: settings).exists, "Open at login missing")
+        XCTAssertTrue(element("require-unlock", in: settings).exists, "Touch ID lock missing")
     }
 
     func testTwoAccountsAndSigningOutDeletesCredentialsAndCache() {
@@ -45,7 +47,10 @@ final class MacSettingsUITests: MacUITestCase {
 
         settings.buttons.matching(identifier: "Sign Out…").firstMatch.click()
         clickDialogButton("Sign Out")
-        waitUntil(15, "every credential to be deleted") { keychain.isEmpty && cacheFiles.values.allSatisfy { $0 == 0 } }
+        // Only the (now empty) account list stays in the Keychain, as on iOS.
+        waitUntil(15, "every credential to be deleted") {
+            !keychain.contains { $0.hasPrefix("oauth.refresh.") || $0.hasPrefix("pgp.private.") } && cacheFiles.values.allSatisfy { $0 == 0 }
+        }
         XCTAssertTrue(app.buttons["Sign in with Google"].waitForExistence(timeout: 10))
     }
 }

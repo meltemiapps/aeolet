@@ -52,8 +52,7 @@ final class MacScreenshotUITests: MacUITestCase {
         settings.buttons["Add Gmail Account"].click()
         waitForLog("TOKEN grant=authorization_code account=\(Self.nikos)")
         settings.toolbars.buttons["Encryption"].click()
-        let enable = settings.checkBoxes["Enable PGP"].exists ? settings.checkBoxes["Enable PGP"] : settings.switches["Enable PGP"]
-        enable.click()
+        element("enable-pgp", in: settings).click()
         for (account, name) in [(Self.elena, "Elena Marinou"), (Self.nikos, "Nikos Andreou")] {
             let generate = settings.buttons["Generate a New Key…"].firstMatch
             XCTAssertTrue(generate.waitForExistence(timeout: 10), "No Generate button for \(account)")
@@ -78,8 +77,8 @@ final class MacScreenshotUITests: MacUITestCase {
         type("Keys to the Naxos studio", into: compose.textFields["compose-subject"])
         type("Hi Elena,\n\nThe lease is signed. The door code is 4815 and the spare key is with Maria at the bakery on the corner.\n\nNikos",
              into: compose.textViews["compose-body"])
-        compose.checkBoxes["Encrypt"].click()
-        compose.checkBoxes["Sign"].click()
+        element("compose-encrypt", in: compose).click()
+        element("compose-sign", in: compose).click()
         let start = logPosition
         app.typeKey("d", modifierFlags: [.command, .shift])
         let field = app.secureTextFields["Passphrase"].firstMatch

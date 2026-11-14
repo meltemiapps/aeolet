@@ -162,6 +162,11 @@ class MacUITestCase: XCTestCase {
         app.windows.matching(NSPredicate(format: "title IN %@", ["General", "Accounts", "Encryption", "About"])).firstMatch
     }
 
+    /// Any element by accessibility identifier, whatever control type this macOS version reports it as.
+    func element(_ identifier: String, in scope: XCUIElement? = nil) -> XCUIElement {
+        (scope ?? app).descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
     /// The front compose window.
     var compose: XCUIElement { app.windows.containing(.any, identifier: "compose-body").firstMatch }
 
