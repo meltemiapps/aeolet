@@ -41,6 +41,13 @@ final class AppModel: ObservableObject {
         do {
             let tokens = try await signInFlow.signIn()
             let email = try await Self.resolveEmail(accessToken: tokens.accessToken)
+            // The same address can't also be an IMAP/app-password account: the new grant is revoked at Google,
+            // as sign-out does, and nothing is saved.
+            guard AccountStore.mailAccount(email) == nil else {
+                await GoogleOAuth.revoke(tokens.refreshToken ?? tokens.accessToken)
+                errorMessage = "This address is already in Aeolet."
+                return
+            }
             try await TokenStore.shared.add(account: email, tokens: tokens)
             accounts = await AccountStore.allAccounts()
             select(email)

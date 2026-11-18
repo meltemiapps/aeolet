@@ -7,6 +7,8 @@ struct AddAccountView: View {
     @EnvironmentObject private var app: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var path: [AccountKind] = []
+    /// A Google sign-in error, shown here because an alert can't appear over this sheet.
+    @State private var googleError: String?
 
     enum AccountKind: Hashable {
         case preset(MailAccount.Provider)
@@ -20,7 +22,10 @@ struct AddAccountView: View {
                     Button {
                         Task {
                             let before = app.accounts.count
+                            googleError = nil
                             await app.signIn()
+                            googleError = app.errorMessage
+                            app.errorMessage = nil
                             if app.accounts.count > before { dismiss() }
                         }
                     } label: {
@@ -48,6 +53,9 @@ struct AddAccountView: View {
                     }
                     .accessibilityIdentifier("addAccount.manual")
                 } footer: {
+                    if let googleError {
+                        Text(googleError).foregroundStyle(.red).accessibilityIdentifier("addAccount.error")
+                    }
                     Text("With Google, Aeolet never sees your password. For other accounts, your password is stored only in this device's Keychain and sent only to your mail server.")
                 }
             }

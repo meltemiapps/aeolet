@@ -124,4 +124,22 @@ final class AccountsUITests: AeoletUITestCase {
         XCTAssertTrue(anyText(containing: "imap.gmail.com:993").exists)
         XCTAssertTrue(anyText(containing: "smtp.gmail.com:465").exists)
     }
+
+    /// Google sign-in for an address that is already an IMAP account is refused, and its grant is revoked, not kept.
+    func testGoogleSignInForAnExistingIMAPAddressIsRefused() {
+        launch(environment: ["AEOLET_MOCK_IMAP_ACCOUNT": Self.elena])
+        openFolders()
+        app.buttons["Add account"].tap()
+        let google = app.buttons["addAccount.google"]
+        XCTAssertTrue(google.waitForExistence(timeout: 10))
+        google.tap()
+        waitForLog("TOKEN grant=authorization_code account=\(Self.elena)")
+
+        let error = app.staticTexts["addAccount.error"]
+        XCTAssertTrue(error.waitForExistence(timeout: 10), "No message for the duplicate address")
+        XCTAssertEqual(error.label, "This address is already in Aeolet.")
+        XCTAssertFalse(keychain.contains("oauth.refresh.\(Self.elena)"), "The new token was stored: \(keychain)")
+        waitForLog("REVOKE token=mock-refresh-\(Self.elena)")
+        XCTAssertTrue(google.exists, "Add Account closed although nothing was added")
+    }
 }
