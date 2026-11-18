@@ -169,6 +169,7 @@ struct FoldersView: View {
     @Binding var showSettings: Bool
     @EnvironmentObject private var app: AppModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showAddAccount = false
 
     var body: some View {
         NavigationStack {
@@ -186,9 +187,7 @@ struct FoldersView: View {
                             }
                         }
                     }
-                    Button("Add Gmail account", systemImage: "plus") {
-                        Task { await app.signIn() }
-                    }
+                    Button("Add account", systemImage: "plus") { showAddAccount = true }
                 }
                 Section("Folders") {
                     ForEach(model.labels) { label in
@@ -220,6 +219,8 @@ struct FoldersView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .sheet(isPresented: $showAddAccount) { AddAccountView() }
+            .onChange(of: app.accounts) { _, _ in showAddAccount = false }
         }
     }
 }

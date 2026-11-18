@@ -13,7 +13,7 @@ struct ComposeContext: Identifiable {
 final class ComposeModel: ObservableObject {
     let account: String
     let context: ComposeContext
-    private let client: GmailClient
+    private let client: any MailService
     private let pgp = PGPStore.shared
 
     @Published var to = ""
@@ -40,7 +40,7 @@ final class ComposeModel: ObservableObject {
     init(account: String, context: ComposeContext) {
         self.account = account
         self.context = context
-        client = GmailClient(account: account)
+        client = MailServices.service(for: account)
         prefill()
     }
 
@@ -174,7 +174,7 @@ final class ComposeModel: ObservableObject {
 
     /// Returns true when the message has been sent and the sheet can close.
     private var overLimitMessage: String {
-        "Attachments total \(AttachmentLimit.format(attachmentsTotal)), over Gmail's \(AttachmentLimit.format(AttachmentLimit.maxTotalBytes)) limit. Remove some to send."
+        "Attachments total \(AttachmentLimit.format(attachmentsTotal)), over \(client.features.limitOwner) \(AttachmentLimit.format(AttachmentLimit.maxTotalBytes)) limit. Remove some to send."
     }
 
     func send() async -> Bool {

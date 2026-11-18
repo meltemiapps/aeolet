@@ -14,4 +14,4 @@ We will acknowledge your report and keep you updated while we work on a fix. Ple
 
 In scope: the Aeolet iOS app and the code in this repository, including OAuth sign-in, token storage, the mail cache, the PGP code and how remote content is blocked.
 
-Out of scope: Gmail and Google's own services, keys.openpgp.org, and problems that need a jailbroken or already compromised device.
+Out of scope: Gmail and Google's own services, the IMAP and SMTP servers you connect to, keys.openpgp.org, and problems that need a jailbroken or already compromised device.

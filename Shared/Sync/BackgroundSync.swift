@@ -1,7 +1,7 @@
 import Foundation
 import UserNotifications
 
-/// Without a server there is no Gmail push. On iOS the system decides when this runs, so delivery is
+/// Without a server there is no push. On iOS the system decides when this runs, so delivery is
 /// opportunistic, not instant (see BackgroundSchedule). The Mac app runs it on a timer while it is open.
 enum BackgroundSync {
     private static func historyKey(_ account: String) -> String { "history.\(account.lowercased())" }
@@ -22,7 +22,7 @@ enum BackgroundSync {
     @discardableResult
     static func checkAll() async -> Int {
         var arrived = 0
-        for account in await TokenStore.shared.accounts() {
+        for account in await AccountStore.allAccounts() {
             arrived += await refresh(account: account)
         }
         return arrived
@@ -30,19 +30,19 @@ enum BackgroundSync {
 
     /// Establishes the starting point so the next refresh reports only newer mail.
     static func establishBaseline(account: String) async {
-        if let profile = try? await GmailClient(account: account).profile(), let history = profile.historyId {
-            AppDefaults.store.set(history, forKey: historyKey(account))
+        if let bookmark = try? await MailServices.service(for: account).newMailBookmark() {
+            AppDefaults.store.set(bookmark, forKey: historyKey(account))
         }
     }
 
     private static func refresh(account: String) async -> Int {
-        let client = GmailClient(account: account)
+        let client = MailServices.service(for: account)
         guard let start = AppDefaults.store.string(forKey: historyKey(account)) else {
             await establishBaseline(account: account)
             return 0
         }
         do {
-            let result = try await client.addedInboxMessageIDs(since: start)
+            let result = try await client.newInboxMessageIDs(since: start)
             if let latest = result.latest { AppDefaults.store.set(latest, forKey: historyKey(account)) }
             for id in result.ids.prefix(5) {
                 guard let message = try? await client.metadata(messageID: id) else { continue }

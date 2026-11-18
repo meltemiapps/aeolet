@@ -47,4 +47,41 @@ final class AccountsUITests: AeoletUITestCase {
         XCTAssertTrue(accountRow(Self.elena).exists)
         XCTAssertFalse(accountRow(Self.nikos).exists, "Signed-out account still listed")
     }
+
+    /// The IMAP form: with nothing published for the domain (the mock answers every autoconfig request with 404,
+    /// and DNS is not queried in mock runs), the fields are filled from the domain on the implicit-TLS ports,
+    /// and the account can't be added without a password.
+    func testOtherAccountFallsBackToTheDomainAndOffersOnlyEncryptedConnections() {
+        launch()
+        let other = app.buttons["signIn.other"]
+        XCTAssertTrue(other.waitForExistence(timeout: 10))
+        other.tap()
+
+        type("alex@example.com", into: app.textFields["manual.email"])
+        app.buttons["manual.discover"].tap()
+        XCTAssertTrue(app.staticTexts["manual.discoveryNote"].waitForExistence(timeout: 30), "Discovery did not finish")
+        XCTAssertTrue(app.staticTexts["manual.discoveryNote"].label.contains("No published settings"))
+
+        XCTAssertEqual(app.textFields["imap.host"].value as? String, "example.com")
+        XCTAssertEqual(app.textFields["imap.port"].value as? String, "993")
+        XCTAssertEqual(app.textFields["smtp.host"].value as? String, "example.com")
+        XCTAssertEqual(app.textFields["smtp.port"].value as? String, "465")
+        // Rows below the fold are created only when scrolled to.
+        let form = app.collectionViews.firstMatch
+        let username = app.textFields["manual.username"]
+        for _ in 0..<5 where !username.exists { form.swipeUp(velocity: .slow) }
+        XCTAssertEqual(username.value as? String, "alex@example.com")
+
+        let add = app.buttons["manual.add"]
+        for _ in 0..<5 where !(add.exists && add.isHittable) { form.swipeUp(velocity: .slow) }
+        XCTAssertFalse(add.isEnabled, "An account can't be added without a password")
+
+        // The security menu offers SSL/TLS and STARTTLS, nothing unencrypted.
+        let security = app.buttons["imap.security"]
+        for _ in 0..<5 where !(security.exists && security.isHittable) { form.swipeDown(velocity: .slow) }
+        security.tap()
+        XCTAssertTrue(app.buttons["STARTTLS"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["None"].exists)
+        XCTAssertFalse(app.buttons["Plain"].exists)
+    }
 }

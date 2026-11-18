@@ -207,7 +207,7 @@ class AeoletUITestCase: XCTestCase {
     func showLabel(_ name: String) {
         openFolders()
         // Folder rows read "Travel" or "Travel, 2" when there is unread mail.
-        let folders = app.collectionViews.containing(.button, identifier: "Add Gmail account").firstMatch
+        let folders = app.collectionViews.containing(.button, identifier: "Add account").firstMatch
         let target = folders.buttons.matching(NSPredicate(format: "label == %@ OR label BEGINSWITH %@", name, name + ",")).firstMatch
         // On iPad the folder sheet is a smaller card, so lower folders may need a scroll.
         for _ in 0..<4 where !(target.exists && target.isHittable) { folders.swipeUp(velocity: .slow) }
@@ -230,13 +230,16 @@ class AeoletUITestCase: XCTestCase {
 
     /// An account row in the folder sheet. Searched only inside that sheet, because mail rows mention addresses too.
     func accountRow(_ account: String) -> XCUIElement {
-        let folders = app.collectionViews.containing(.button, identifier: "Add Gmail account").firstMatch
+        let folders = app.collectionViews.containing(.button, identifier: "Add account").firstMatch
         return folders.buttons.matching(NSPredicate(format: "label == %@ OR label BEGINSWITH %@", account, account + ",")).firstMatch
     }
 
     func addSecondAccount() {
         openFolders()
-        app.buttons["Add Gmail account"].tap()
+        app.buttons["Add account"].tap()
+        let google = app.buttons["addAccount.google"]
+        XCTAssertTrue(google.waitForExistence(timeout: 10), "No Google choice in Add Account")
+        google.tap()
         waitForLog("TOKEN grant=authorization_code account=\(Self.nikos)")
         waitForLog("LIST label=INBOX", "account=\(Self.nikos)")
     }

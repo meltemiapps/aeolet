@@ -99,6 +99,7 @@ struct MailSplitView: View {
 struct SidebarView: View {
     @ObservedObject var window: MailWindowModel
     @EnvironmentObject private var app: AppModel
+    @State private var showAddAccount = false
 
     var body: some View {
         List(selection: $window.selection) {
@@ -115,12 +116,13 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
             Button {
-                Task { await app.signIn() }
+                showAddAccount = true
             } label: {
                 Label("Add Account", systemImage: "plus")
             }
             .buttonStyle(.borderless)
             .disabled(app.isSigningIn)
+            .sheet(isPresented: $showAddAccount) { AddAccountView() }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -292,6 +294,7 @@ struct MacThreadRow: View {
 
 struct MacSignInView: View {
     @EnvironmentObject private var app: AppModel
+    @State private var showManual = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -300,7 +303,7 @@ struct MacSignInView: View {
                 .foregroundStyle(Theme.aegean)
             VStack(spacing: 6) {
                 Text("Aeolet").font(.largeTitle.bold())
-                Text("Open-source Gmail, private by design.").foregroundStyle(.secondary)
+                Text("Open-source mail, private by design.").foregroundStyle(.secondary)
             }
             Button {
                 Task { await app.signIn() }
@@ -313,12 +316,16 @@ struct MacSignInView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .disabled(app.isSigningIn)
-            Text("Your password goes only to Google. Aeolet receives a revocable token, stored in this Mac's Keychain.")
+            Button { showManual = true } label: { Text("Other Mail Account…").frame(width: 220) }
+                .controlSize(.large)
+                .accessibilityIdentifier("signIn.other")
+            Text("With Google, your password goes only to Google and Aeolet receives a revocable token. For other accounts, your password is stored only in this Mac's Keychain and sent only to your mail server.")
                 .font(.footnote)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: 360)
+                .frame(maxWidth: 380)
         }
+        .sheet(isPresented: $showManual) { ManualAccountSheet() }
         .padding(40)
         .frame(minWidth: 640, minHeight: 460)
     }

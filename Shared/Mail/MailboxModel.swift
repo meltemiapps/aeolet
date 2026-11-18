@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 final class MailboxModel: ObservableObject {
     let account: String
-    private let client: GmailClient
+    private let client: any MailService
 
     @Published var labels: [GmailLabel] = []
     @Published var selectedLabelID = "INBOX"
@@ -17,7 +17,14 @@ final class MailboxModel: ObservableObject {
 
     init(account: String) {
         self.account = account
-        client = GmailClient(account: account)
+        client = MailServices.service(for: account)
+    }
+
+    var supportsLabels: Bool { client.features.labels }
+
+    /// Gmail searches all mail. IMAP searches the folder on screen.
+    private var listedLabel: String? {
+        activeSearch == nil || !client.features.searchesAllMail ? selectedLabelID : nil
     }
 
     var title: String {
@@ -58,7 +65,7 @@ final class MailboxModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         do {
-            let page = try await client.threads(labelID: activeSearch == nil ? selectedLabelID : nil, query: activeSearch, pageToken: nil)
+            let page = try await client.threads(labelID: listedLabel, query: activeSearch, pageToken: nil)
             threads = page.items
             nextPage = page.next
             errorMessage = nil
@@ -77,7 +84,7 @@ final class MailboxModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         do {
-            let page = try await client.threads(labelID: activeSearch == nil ? selectedLabelID : nil, query: activeSearch, pageToken: token)
+            let page = try await client.threads(labelID: listedLabel, query: activeSearch, pageToken: token)
             let known = Set(threads.map(\.id))
             threads += page.items.filter { !known.contains($0.id) }
             nextPage = page.next

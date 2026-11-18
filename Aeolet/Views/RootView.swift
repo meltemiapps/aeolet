@@ -95,6 +95,7 @@ struct SetupRequiredView: View {
 
 struct SignInView: View {
     @EnvironmentObject private var app: AppModel
+    @State private var showManual = false
 
     var body: some View {
         VStack(spacing: 28) {
@@ -104,7 +105,7 @@ struct SignInView: View {
                 .foregroundStyle(Theme.aegean)
             VStack(spacing: 8) {
                 Text("Aeolet").font(.largeTitle.bold())
-                Text("Open-source Gmail, private by design.").foregroundStyle(.secondary)
+                Text("Open-source mail, private by design.").foregroundStyle(.secondary)
             }
             Spacer()
             VStack(spacing: 12) {
@@ -120,12 +121,17 @@ struct SignInView: View {
                 .controlSize(.large)
                 .disabled(app.isSigningIn)
 
-                Text("Your password goes only to Google. Aeolet receives a revocable token, stored in this device's Keychain.")
+                Button("Other Mail Account") { showManual = true }
+                    .controlSize(.large)
+                    .accessibilityIdentifier("signIn.other")
+
+                Text("With Google, your password goes only to Google and Aeolet receives a revocable token. For other accounts, your password is stored only in this device's Keychain and sent only to your mail server.")
                     .font(.footnote)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
             }
         }
         .padding(24)
+        .sheet(isPresented: $showManual) { ManualAccountSheet() }
     }
 }

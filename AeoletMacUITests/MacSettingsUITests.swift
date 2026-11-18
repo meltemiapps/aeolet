@@ -25,7 +25,10 @@ final class MacSettingsUITests: MacUITestCase {
         launch()
         signInAndWaitForInbox()
         openSettings(tab: "Accounts")
-        settings.buttons["Add Gmail Account"].click()
+        settings.buttons["Add Account…"].click()
+        let google = app.buttons["addAccount.google"]
+        XCTAssertTrue(google.waitForExistence(timeout: 10), "No Google choice in Add Account")
+        google.click()
         waitForLog("TOKEN grant=authorization_code account=\(Self.nikos)")
         XCTAssertTrue(sidebar("INBOX", account: Self.nikos).waitForExistence(timeout: 15), "Second account missing from the sidebar")
         // Opening Nikos's inbox writes his cache.

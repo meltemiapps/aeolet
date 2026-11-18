@@ -73,6 +73,9 @@ private struct GeneralSettings: View {
 private struct AccountsSettings: View {
     @EnvironmentObject private var app: AppModel
     @State private var accountToRemove: String?
+    @State private var showAddAccount = false
+
+    private var removingGoogle: Bool { accountToRemove.map(app.isGoogleAccount) ?? true }
 
     var body: some View {
         Form {
@@ -88,22 +91,23 @@ private struct AccountsSettings: View {
                     }
                 }
             } header: {
-                Text("Gmail accounts")
+                Text("Accounts")
             } footer: {
-                Text("Signing out revokes Aeolet's access at Google and deletes the account's token, cached mail list and PGP private key from this Mac.")
+                Text("Signing out of a Google account revokes Aeolet's access at Google. Signing out of any account deletes its password or token, cached mail list and PGP private key from this Mac.")
                     .foregroundStyle(.secondary)
             }
             Section {
                 Button {
-                    Task { await app.signIn() }
+                    showAddAccount = true
                 } label: {
-                    Label("Add Gmail Account", systemImage: "plus")
+                    Label("Add Account…", systemImage: "plus")
                 }
                 .disabled(app.isSigningIn)
+                .sheet(isPresented: $showAddAccount) { AddAccountView() }
             }
         }
         .formStyle(.grouped)
-        .confirmationDialog("Sign out and revoke access?", isPresented: Binding(
+        .confirmationDialog(removingGoogle ? "Sign out and revoke access?" : "Remove this account?", isPresented: Binding(
             get: { accountToRemove != nil },
             set: { if !$0 { accountToRemove = nil } }
         ), titleVisibility: .visible) {
@@ -117,7 +121,9 @@ private struct AccountsSettings: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Revokes this app's access at Google and deletes the account's tokens and PGP private key from this Mac. Back up your PGP key first.")
+            Text(removingGoogle
+                 ? "Revokes this app's access at Google and deletes the account's tokens and PGP private key from this Mac. Back up your PGP key first."
+                 : "Deletes the account's password, settings, cached mail list and PGP private key from this Mac. Your mail stays on the server. Back up your PGP key first.")
         }
     }
 }
@@ -157,11 +163,7 @@ private struct AboutSettings: View {
                 if let url = AppConfig.sourceCodeURL { Link("Source code", destination: url) }
             }
             Section("Open-source licences") {
-                Text("""
-                Aeolet is licensed under the Apache License 2.0.
-
-                OpenPGP.js is licensed under the GNU Lesser General Public License v3.0 or later. Source: github.com/openpgpjs/openpgpjs. You may replace the bundled library by rebuilding from PGP/js in this project's source code.
-                """)
+                Text(OpenSourceNotices.text)
                 .font(.callout)
                 .textSelection(.enabled)
             }
