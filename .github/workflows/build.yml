@@ -15,7 +15,10 @@ jobs:
           npx playwright install --with-deps chromium
           npm test
   ios:
-    runs-on: macos-15
+    # Pushes to this repository's branches run on the project's own Mac (a self-hosted runner). Pull requests,
+    # including any from forks, never do: they stay on GitHub-hosted runners, and outside contributors'
+    # workflows need the maintainer's approval before they start.
+    runs-on: ${{ github.event_name == 'push' && fromJSON('["self-hosted", "macOS", "aeolet"]') || 'macos-15' }}
     steps:
       - uses: actions/checkout@v5
       - name: Unit and UI tests (UI tests run against the in-app mock Gmail server)
@@ -40,7 +43,10 @@ jobs:
           path: TestResults.xcresult
           if-no-files-found: ignore
   mac:
-    runs-on: macos-15
+    # Pushes to this repository's branches run on the project's own Mac (a self-hosted runner). Pull requests,
+    # including any from forks, never do: they stay on GitHub-hosted runners, and outside contributors'
+    # workflows need the maintainer's approval before they start.
+    runs-on: ${{ github.event_name == 'push' && fromJSON('["self-hosted", "macOS", "aeolet"]') || 'macos-15' }}
     steps:
       - uses: actions/checkout@v5
       - name: Mac unit and UI tests (UI tests run against the in-app mock Gmail server)
