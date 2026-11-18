@@ -68,6 +68,7 @@ final class AppModel: ObservableObject {
         var account = account
         account.email = account.email.trimmingCharacters(in: .whitespacesAndNewlines)
         account.username = account.username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let password = account.provider.normalisedPassword(password)
         guard account.isValid, !password.isEmpty else { throw AccountError.invalidSettings }
         guard !accounts.contains(where: { $0.lowercased() == account.id }) else { throw AccountError.alreadyAdded(account.email) }
 

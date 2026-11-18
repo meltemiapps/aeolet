@@ -24,7 +24,15 @@ struct IMAPService: MailService {
 
     var account: String { settings.email }
 
-    var features: MailFeatures { MailFeatures(labels: false, searchesAllMail: false, limitOwner: "the") }
+    var features: MailFeatures {
+        let owner: String
+        switch settings.provider {
+        case .gmail: owner = "Gmail's"
+        case .yahoo: owner = "Yahoo's"
+        case .manual: owner = "the"
+        }
+        return MailFeatures(labels: false, searchesAllMail: false, limitOwner: owner)
+    }
 
     private var session: IMAPSession { IMAPSessionPool.session(for: settings) }
 
@@ -211,10 +219,17 @@ struct IMAPService: MailService {
         let recipients = IMAPMapping.recipients(of: message)
         guard !recipients.isEmpty else { throw IMAPServiceError.noRecipients }
         try await SMTPSender.send(IMAPMapping.removingBcc(from: message), from: settings.email, to: recipients, settings: settings)
-        // Most servers do not file what SMTP sends, so the copy in Sent is added here. A failure to file it
+        // Most servers do not file what SMTP sends, so the copy in Sent is added here, unless the provider is
+        // known to file it (Gmail) or the server already did (looked up by Message-ID). A failure to file it
         // must not look like a failure to send.
+        guard !settings.provider.filesSentMail else { return }
         try? await session.run { server, _ in
             guard let sent = try? await server.sentFolder else { return }
+            if let messageID = IMAPMapping.messageID(of: message) {
+                _ = try await server.selectMailbox(sent.name)
+                let found: ExtendedSearchResult<UID>? = try? await server.extendedSearch(criteria: [.header("Message-ID", messageID)])
+                if let found, !(found.all?.toArray() ?? []).isEmpty { return }
+            }
             try await server.append(rawMessage: String(decoding: message, as: UTF8.self), to: sent.name, flags: [.seen], internalDate: Date())
         }
     }

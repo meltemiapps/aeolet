@@ -37,6 +37,9 @@ struct ServerEndpoint: Codable, Hashable {
 struct MailAccount: Codable, Hashable, Identifiable {
     enum Provider: String, Codable {
         case manual
+        /// Gmail over IMAP with an app password (the Google sign-in account type does not use this).
+        case gmail
+        case yahoo
     }
 
     var email: String
@@ -60,6 +63,29 @@ struct MailAccount: Codable, Hashable, Identifiable {
         return text.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
     }
 
+    /// Fixed settings for a provider with an app-password preset. Nil for `.manual`.
+    static func preset(_ provider: Provider, email: String) -> MailAccount? {
+        let (imapHost, smtpHost): (String, String)
+        switch provider {
+        case .manual: return nil
+        case .gmail: (imapHost, smtpHost) = ("imap.gmail.com", "smtp.gmail.com")
+        case .yahoo: (imapHost, smtpHost) = ("imap.mail.yahoo.com", "smtp.mail.yahoo.com")
+        }
+        return MailAccount(
+            email: email, displayName: "", provider: provider, username: email,
+            imap: ServerEndpoint(host: imapHost, port: 993, security: .tls),
+            smtp: ServerEndpoint(host: smtpHost, port: 465, security: .tls))
+    }
+
+    /// Consumer mail domains whose settings are known, so discovery need not ask the network.
+    /// Google Workspace and other custom domains on these providers still go through discovery or a preset form.
+    static func knownProvider(forDomain domain: String) -> Provider? {
+        let domain = domain.lowercased()
+        if ["gmail.com", "googlemail.com"].contains(domain) { return .gmail }
+        if ["ymail.com", "rocketmail.com"].contains(domain) || domain.hasPrefix("yahoo.") { return .yahoo }
+        return nil
+    }
+
     /// The starting point when nothing could be discovered: the mail domain itself, on the implicit-TLS ports.
     static func defaults(for email: String) -> MailAccount {
         let domain = email.split(separator: "@").last.map(String.init)?.lowercased() ?? ""
@@ -67,5 +93,40 @@ struct MailAccount: Codable, Hashable, Identifiable {
             email: email, displayName: "", provider: .manual, username: email,
             imap: ServerEndpoint(host: domain, port: 993, security: .tls),
             smtp: ServerEndpoint(host: domain, port: 465, security: .tls))
+    }
+}
+
+extension MailAccount.Provider {
+    var name: String {
+        switch self {
+        case .manual: return "Other mail account"
+        case .gmail: return "Gmail"
+        case .yahoo: return "Yahoo Mail"
+        }
+    }
+
+    /// Where the person creates the app password this provider requires.
+    var appPasswordURL: URL? {
+        switch self {
+        case .manual: return nil
+        case .gmail: return URL(string: "https://myaccount.google.com/apppasswords")
+        case .yahoo: return URL(string: "https://help.yahoo.com/kb/SLN15241.html")
+        }
+    }
+
+    var appPasswordNote: String? {
+        switch self {
+        case .manual: return nil
+        case .gmail: return "Gmail needs an app password here, not your Google password. App passwords need 2-Step Verification turned on for your Google account."
+        case .yahoo: return "Yahoo Mail needs an app password here, not your Yahoo password. Create one in your Yahoo account's security settings."
+        }
+    }
+
+    /// Whether the provider's SMTP server files sent mail in Sent by itself, so a copy must not be added.
+    var filesSentMail: Bool { self == .gmail }
+
+    /// App passwords are shown in groups of four letters; the spaces are not part of the password.
+    func normalisedPassword(_ password: String) -> String {
+        self == .manual ? password : password.filter { !$0.isWhitespace }
     }
 }

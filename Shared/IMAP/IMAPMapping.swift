@@ -183,6 +183,13 @@ enum IMAPMapping {
         return Data(kept.joined(separator: "\r\n").utf8) + Data(rest)
     }
 
+    /// The Message-ID header's value, angle brackets included, or nil if the message has none.
+    static func messageID(of raw: Data) -> String? {
+        let root = MIMEParser.parse([UInt8](headerBlock(of: raw)) + [0x0D, 0x0A, 0x0D, 0x0A])
+        guard let value = root.header("Message-ID")?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { return nil }
+        return value
+    }
+
     /// The header lines up to, not including, the blank line.
     private static func headerBlock(of raw: Data) -> [UInt8] {
         let bytes = [UInt8](raw)

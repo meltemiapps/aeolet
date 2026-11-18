@@ -84,4 +84,44 @@ final class AccountsUITests: AeoletUITestCase {
         XCTAssertFalse(app.buttons["None"].exists)
         XCTAssertFalse(app.buttons["Plain"].exists)
     }
+
+    /// A Gmail address typed into the IMAP form gets Gmail's servers without asking the network, and the
+    /// app-password note with its link.
+    func testGmailAddressInOtherAccountUsesGmailsServers() {
+        launch()
+        let other = app.buttons["signIn.other"]
+        XCTAssertTrue(other.waitForExistence(timeout: 10))
+        other.tap()
+
+        type("alex@gmail.com", into: app.textFields["manual.email"])
+        app.buttons["manual.discover"].tap()
+        XCTAssertTrue(app.staticTexts["manual.discoveryNote"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["manual.discoveryNote"].label.contains("Gmail"))
+        XCTAssertEqual(app.textFields["imap.host"].value as? String, "imap.gmail.com")
+        XCTAssertEqual(app.textFields["smtp.host"].value as? String, "smtp.gmail.com")
+    }
+
+    /// The Gmail preset asks only for the address, name and app password, shows the fixed servers and links to
+    /// where app passwords are made.
+    func testGmailPresetShowsServersAndAppPasswordLink() {
+        launch()
+        signInAndWaitForInbox()
+        openFolders()
+        app.buttons["Add account"].tap()
+        let gmail = app.buttons["addAccount.gmail"]
+        XCTAssertTrue(gmail.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["addAccount.yahoo"].exists)
+        gmail.tap()
+
+        type("alex@gmail.com", into: app.textFields["preset.email"])
+        let link = app.descendants(matching: .any)["preset.appPasswordLink"]
+        XCTAssertTrue(link.waitForExistence(timeout: 5), "No link to create a Google app password")
+        // Dragging the form dismisses the keyboard (.scrollDismissesKeyboard) and reaches the rows below it.
+        let form = app.collectionViews.firstMatch
+        let add = app.buttons["preset.add"]
+        for _ in 0..<5 where !(add.exists && add.isHittable) { form.swipeUp(velocity: .slow) }
+        XCTAssertFalse(add.isEnabled, "An account can't be added without an app password")
+        XCTAssertTrue(anyText(containing: "imap.gmail.com:993").exists)
+        XCTAssertTrue(anyText(containing: "smtp.gmail.com:465").exists)
+    }
 }

@@ -1,14 +1,20 @@
 import SwiftMail
 import SwiftUI
 
-/// "Add account": Google through its own sign-in page, or any mail account over IMAP and SMTP.
+/// "Add account": Google through its own sign-in page, Gmail or Yahoo with an app password, or any mail
+/// account over IMAP and SMTP.
 struct AddAccountView: View {
     @EnvironmentObject private var app: AppModel
     @Environment(\.dismiss) private var dismiss
-    @State private var showManual = false
+    @State private var path: [AccountKind] = []
+
+    enum AccountKind: Hashable {
+        case preset(MailAccount.Provider)
+        case manual
+    }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Form {
                 Section {
                     Button {
@@ -18,13 +24,25 @@ struct AddAccountView: View {
                             if app.accounts.count > before { dismiss() }
                         }
                     } label: {
-                        AccountTypeRow(title: "Google", detail: "Recommended for Gmail and Google Workspace. You sign in on Google's own page.",
+                        AccountTypeRow(title: "Google (Recommended)", detail: "For Gmail and Google Workspace. You sign in on Google's own page.",
                                        symbol: "g.circle")
                     }
                     .disabled(app.isSigningIn)
                     .accessibilityIdentifier("addAccount.google")
 
-                    Button { showManual = true } label: {
+                    Button { path = [.preset(.gmail)] } label: {
+                        AccountTypeRow(title: "Gmail with an app password", detail: "Gmail over IMAP and SMTP. Needs 2-Step Verification and an app password.",
+                                       symbol: "key")
+                    }
+                    .accessibilityIdentifier("addAccount.gmail")
+
+                    Button { path = [.preset(.yahoo)] } label: {
+                        AccountTypeRow(title: "Yahoo Mail", detail: "Yahoo over IMAP and SMTP with an app password.",
+                                       symbol: "y.circle")
+                    }
+                    .accessibilityIdentifier("addAccount.yahoo")
+
+                    Button { path = [.manual] } label: {
                         AccountTypeRow(title: "Other mail account", detail: "Any provider with IMAP and SMTP. Settings are found from your address where possible.",
                                        symbol: "envelope")
                     }
@@ -41,12 +59,15 @@ struct AddAccountView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             }
-            .navigationDestination(isPresented: $showManual) {
-                ManualAccountView { dismiss() }
+            .navigationDestination(for: AccountKind.self) { kind in
+                switch kind {
+                case let .preset(provider): PresetAccountView(provider: provider) { dismiss() }
+                case .manual: ManualAccountView { dismiss() }
+                }
             }
         }
         #if os(macOS)
-        .frame(width: 480, height: 560)
+        .frame(width: 480, height: 600)
         #endif
     }
 }
@@ -136,7 +157,10 @@ struct ManualAccountView: View {
                 } header: {
                     Text("Sign-in")
                 } footer: {
-                    Text("Used for both servers. Stored only in this device's Keychain and sent only to these servers, always over an encrypted connection with a verified certificate.")
+                    VStack(alignment: .leading, spacing: 6) {
+                        if let provider = account?.provider, provider != .manual { AppPasswordNote(provider: provider) }
+                        Text("Used for both servers. Stored only in this device's Keychain and sent only to these servers, always over an encrypted connection with a verified certificate.")
+                    }
                 }
                 Section {
                     Button {
@@ -178,11 +202,16 @@ struct ManualAccountView: View {
         case let .autoconfig(host): discoveryNote = "Settings published by \(host). Check them before you continue."
         case .dns: discoveryNote = "Settings found in your domain's DNS. Check them before you continue."
         case .guess: discoveryNote = "No published settings found, so these use your domain. Check them with your mail provider."
+        case let .known(provider): discoveryNote = "These are \(provider.name)'s settings."
         }
     }
 
     private func add() async {
-        guard let account, !isWorking else { return }
+        guard var account, !isWorking else { return }
+        if let preset = MailAccount.preset(account.provider, email: account.email),
+           preset.imap != account.imap || preset.smtp != account.smtp {
+            account.provider = .manual
+        }
         isWorking = true
         defer { isWorking = false }
         errorMessage = nil
@@ -223,14 +252,130 @@ private struct ServerSection: View {
     }
 }
 
+/// The app-password explanation with a link to where the password is created.
+private struct AppPasswordNote: View {
+    let provider: MailAccount.Provider
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let note = provider.appPasswordNote { Text(note) }
+            if let url = provider.appPasswordURL {
+                Link(provider == .gmail ? "Create a Google app password" : "How to create a Yahoo app password", destination: url)
+                    .accessibilityIdentifier("preset.appPasswordLink")
+            }
+        }
+    }
+}
+
+/// Gmail or Yahoo with an app password: the servers are fixed, so only the address, name and app password
+/// are asked for. Both servers must accept the password before the account is added.
+struct PresetAccountView: View {
+    @EnvironmentObject private var app: AppModel
+    let provider: MailAccount.Provider
+    let onAdded: () -> Void
+
+    @State private var email = ""
+    @State private var displayName = ""
+    @State private var password = ""
+    @State private var isWorking = false
+    @State private var errorMessage: String?
+
+    private var account: MailAccount? {
+        let address = email.trimmed
+        guard MailAccount.isPlausibleEmail(address), var account = MailAccount.preset(provider, email: address) else { return nil }
+        account.displayName = displayName
+        return account
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                TextField("Email address", text: $email, prompt: Text(provider == .gmail ? "name@gmail.com" : "name@yahoo.com"))
+                    .textContentType(.emailAddress)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                    .accessibilityIdentifier("preset.email")
+                TextField("Name", text: $displayName, prompt: Text("Shown to people you write to (optional)"))
+                    .textContentType(.name)
+            }
+            Section {
+                SecureField("App password", text: $password)
+                    .textContentType(.password)
+                    .accessibilityIdentifier("preset.password")
+            } header: {
+                Text("App password")
+            } footer: {
+                VStack(alignment: .leading, spacing: 6) {
+                    AppPasswordNote(provider: provider)
+                    Text("Stored only in this device's Keychain and sent only to \(provider.name), always over an encrypted connection with a verified certificate.")
+                }
+            }
+            if let preset = MailAccount.preset(provider, email: "") {
+                Section("Servers") {
+                    LabeledContent("Incoming (IMAP)", value: "\(preset.imap.host):\(preset.imap.port), \(preset.imap.security.label)")
+                    LabeledContent("Outgoing (SMTP)", value: "\(preset.smtp.host):\(preset.smtp.port), \(preset.smtp.security.label)")
+                }
+                .font(.footnote)
+                .accessibilityIdentifier("preset.servers")
+            }
+            Section {
+                Button {
+                    Task { await add() }
+                } label: {
+                    HStack {
+                        Text("Add Account")
+                        if isWorking { Spacer(); ProgressView() }
+                    }
+                }
+                .disabled(isWorking || password.isEmpty || account == nil)
+                .accessibilityIdentifier("preset.add")
+            } footer: {
+                if let errorMessage {
+                    Text(errorMessage).foregroundStyle(.red).accessibilityIdentifier("preset.error")
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle(provider.name)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    private func add() async {
+        guard let account, !isWorking else { return }
+        isWorking = true
+        defer { isWorking = false }
+        errorMessage = nil
+        do {
+            try await app.addMailAccount(account, password: password)
+            password = ""
+            onAdded()
+        } catch {
+            errorMessage = AccountSetupMessage.describe(error, account: account)
+        }
+    }
+}
+
 /// Plain words for what went wrong while adding an account. Never includes the password.
 enum AccountSetupMessage {
     static func describe(_ error: Error, account: MailAccount) -> String {
         switch error {
-        case IMAPError.loginFailed, IMAPError.authFailed:
-            return "\(account.imap.host) didn't accept the user name or password."
-        case SMTPError.authenticationFailed:
-            return "\(account.smtp.host) didn't accept the user name or password for sending."
+        case IMAPError.loginFailed, IMAPError.authFailed, SMTPError.authenticationFailed:
+            switch account.provider {
+            case .gmail:
+                return "Gmail didn't accept the address or app password. Use an app password, not your Google password, and check that 2-Step Verification is on."
+            case .yahoo:
+                return "Yahoo didn't accept the address or app password. Use an app password, not your Yahoo password."
+            case .manual:
+                return error is SMTPError
+                    ? "\(account.smtp.host) didn't accept the user name or password for sending."
+                    : "\(account.imap.host) didn't accept the user name or password."
+            }
         case let error as AccountError:
             return error.localizedDescription
         default:

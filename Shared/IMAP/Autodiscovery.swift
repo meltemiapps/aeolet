@@ -13,6 +13,8 @@ enum Autodiscovery {
         case autoconfig(host: String)
         case dns
         case guess
+        /// A consumer domain whose settings Aeolet already knows (Gmail, Yahoo). No network request is made.
+        case known(MailAccount.Provider)
     }
 
     struct Result {
@@ -24,6 +26,9 @@ enum Autodiscovery {
         let fallback = MailAccount.defaults(for: email)
         let domain = fallback.domain
         guard !domain.isEmpty else { return Result(account: fallback, source: .guess) }
+        if let provider = MailAccount.knownProvider(forDomain: domain), let preset = MailAccount.preset(provider, email: email) {
+            return Result(account: preset, source: .known(provider))
+        }
 
         for url in autoconfigURLs(domain: domain) {
             if let data = await fetch(url), let found = AutoconfigParser.parse(data, email: email) {

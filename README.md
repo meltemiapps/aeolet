@@ -7,7 +7,7 @@ An open-source, native mail client for iPhone, iPad and Mac, in the spirit of K-
 - Native SwiftUI client on the Gmail REST API: threads, labels, search, read and unread, star, archive, bin, spam, attachments, reply, reply all, forward, drafts.
 - Attach photos from the Photo Library (Apple's picker, so no access to your library is requested) and files from the Files picker, which includes iCloud Drive, Google Drive and any other installed provider. Photos go out as JPEG with their location removed unless you turn on Settings > Keep photo originals. Compose shows each attachment's size and keeps the total within Gmail's 25 MB limit.
 - Preview received attachments with Quick Look, save them to Files or pass them on with the share sheet.
-- Several accounts: Gmail through its API, and any other provider over IMAP and SMTP.
+- Several accounts: Gmail through its API, Gmail and Yahoo Mail with an app password, and any other provider over IMAP and SMTP.
 - Google sign-in with OAuth 2.0 and PKCE in Apple's system sign-in sheet. Your Google password goes to Google only.
 - IMAP and SMTP accounts: settings are found from your address (Mozilla autoconfig over HTTPS, then DNS SRV records) and can always be edited. Only SSL/TLS or STARTTLS connections with a valid certificate for the server name are allowed; there is no plain-text option and no way to accept an invalid certificate. The password is kept in the Keychain (this device only, never iCloud) and sent only to the account's own servers. Discovery never sends the password or your full address.
 - Refresh tokens in the iOS Keychain, this device only, never iCloud. Access tokens stay in memory.

@@ -240,4 +240,55 @@ final class IMAPTests: XCTestCase {
         let encoded = String(decoding: try JSONEncoder().encode([account]), as: UTF8.self)
         XCTAssertFalse(encoded.lowercased().contains("password"))
     }
+
+    // MARK: Gmail and Yahoo presets
+
+    func testPresetsUseTheProvidersImplicitTLSServers() throws {
+        let gmail = try XCTUnwrap(MailAccount.preset(.gmail, email: "alex@gmail.com"))
+        XCTAssertEqual(gmail.imap, ServerEndpoint(host: "imap.gmail.com", port: 993, security: .tls))
+        XCTAssertEqual(gmail.smtp, ServerEndpoint(host: "smtp.gmail.com", port: 465, security: .tls))
+        XCTAssertEqual(gmail.username, "alex@gmail.com")
+        XCTAssertTrue(gmail.isValid)
+
+        let yahoo = try XCTUnwrap(MailAccount.preset(.yahoo, email: "alex@yahoo.com"))
+        XCTAssertEqual(yahoo.imap, ServerEndpoint(host: "imap.mail.yahoo.com", port: 993, security: .tls))
+        XCTAssertEqual(yahoo.smtp, ServerEndpoint(host: "smtp.mail.yahoo.com", port: 465, security: .tls))
+        XCTAssertNil(MailAccount.preset(.manual, email: "alex@example.com"))
+    }
+
+    func testKnownDomainsAreRecognisedWithoutTheNetwork() async {
+        XCTAssertEqual(MailAccount.knownProvider(forDomain: "Gmail.com"), .gmail)
+        XCTAssertEqual(MailAccount.knownProvider(forDomain: "googlemail.com"), .gmail)
+        XCTAssertEqual(MailAccount.knownProvider(forDomain: "yahoo.co.uk"), .yahoo)
+        XCTAssertEqual(MailAccount.knownProvider(forDomain: "ymail.com"), .yahoo)
+        XCTAssertNil(MailAccount.knownProvider(forDomain: "example.com"))
+        XCTAssertNil(MailAccount.knownProvider(forDomain: "notyahoo.example.com"))
+
+        let result = await Autodiscovery.discover(email: "alex@gmail.com")
+        XCTAssertEqual(result.source, .known(.gmail))
+        XCTAssertEqual(result.account.imap.host, "imap.gmail.com")
+    }
+
+    func testAppPasswordSpacesAreDroppedOnlyForPresets() {
+        XCTAssertEqual(MailAccount.Provider.gmail.normalisedPassword("abcd efgh\tijkl mnop"), "abcdefghijklmnop")
+        XCTAssertEqual(MailAccount.Provider.manual.normalisedPassword(" pass word "), " pass word ")
+    }
+
+    func testOnlyGmailFilesSentMailItself() {
+        XCTAssertTrue(MailAccount.Provider.gmail.filesSentMail)
+        XCTAssertFalse(MailAccount.Provider.yahoo.filesSentMail)
+        XCTAssertFalse(MailAccount.Provider.manual.filesSentMail)
+    }
+
+    func testAppPasswordLinksAreHTTPSOnTheProvidersOwnSites() {
+        XCTAssertEqual(MailAccount.Provider.gmail.appPasswordURL?.absoluteString, "https://myaccount.google.com/apppasswords")
+        XCTAssertEqual(MailAccount.Provider.yahoo.appPasswordURL?.host, "help.yahoo.com")
+        XCTAssertNil(MailAccount.Provider.manual.appPasswordURL)
+    }
+
+    func testMessageIDIsReadFromTheHeader() {
+        let raw = Data("From: a@example.com\r\nMessage-ID: <abc@example.com>\r\nSubject: Hi\r\n\r\nBody".utf8)
+        XCTAssertEqual(IMAPMapping.messageID(of: raw), "<abc@example.com>")
+        XCTAssertNil(IMAPMapping.messageID(of: Data("Subject: Hi\r\n\r\nBody".utf8)))
+    }
 }
