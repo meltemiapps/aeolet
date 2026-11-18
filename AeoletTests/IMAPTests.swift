@@ -70,7 +70,12 @@ final class IMAPTests: XCTestCase {
 
     func testSRVRecordParsing() throws {
         // Priority 10, weight 5, port 993, target imap.example.com.
-        let bytes: [UInt8] = [0, 10, 0, 5, 0x03, 0xE1, 4] + Array("imap".utf8) + [7] + Array("example".utf8) + [3] + Array("com".utf8) + [0]
+        var bytes: [UInt8] = [0, 10, 0, 5, 0x03, 0xE1]
+        for label in ["imap", "example", "com"] {
+            bytes.append(UInt8(label.utf8.count))
+            bytes.append(contentsOf: Array(label.utf8))
+        }
+        bytes.append(0)
         let record = try XCTUnwrap(SRVLookup.parse(bytes))
         XCTAssertEqual(record, SRVLookup.Record(priority: 10, weight: 5, port: 993, target: "imap.example.com"))
         XCTAssertNil(SRVLookup.parse([0, 1, 2]))
