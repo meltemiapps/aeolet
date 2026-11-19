@@ -1,35 +1,36 @@
 # Aeolet
 
-An open-source, native mail client for iPhone, iPad and Mac, in the spirit of K-9 Mail. Free, no ads, no tracking and no server: the app talks directly to Google, or to your own mail server over IMAP and SMTP.
+An open-source, native mail client for iPhone, iPad and Mac, in the spirit of K-9 Mail. Free, no ads, no tracking and no server: the app talks directly to your mail server over IMAP and SMTP, or to the Gmail API for Gmail accounts added with Google sign-in in version 1.0.
 
 ## What it does
 
-- Native SwiftUI client on the Gmail REST API: threads, labels, search, read and unread, star, archive, bin, spam, attachments, reply, reply all, forward, drafts.
-- Attach photos from the Photo Library (Apple's picker, so no access to your library is requested) and files from the Files picker, which includes iCloud Drive, Google Drive and any other installed provider. Photos go out as JPEG with their location removed unless you turn on Settings > Keep photo originals. Compose shows each attachment's size and keeps the total within Gmail's 25 MB limit.
+- Native SwiftUI client: threads, labels or folders, search, read and unread, star, archive, bin, spam, attachments, reply, reply all, forward, drafts.
+- Attach photos from the Photo Library (Apple's picker, so no access to your library is requested) and files from the Files picker, which includes iCloud Drive, Google Drive and any other installed provider. Photos go out as JPEG with their location removed unless you turn on Settings > Keep photo originals. Compose shows each attachment's size and keeps the total within 25 MB, for every account.
 - Preview received attachments with Quick Look, save them to Files or pass them on with the share sheet.
-- Several accounts: Gmail through its API, Gmail and Yahoo Mail with an app password, and any other provider over IMAP and SMTP.
-- Google sign-in with OAuth 2.0 and PKCE in Apple's system sign-in sheet. Your Google password goes to Google only.
-- IMAP and SMTP accounts: settings are found from your address (Mozilla autoconfig over HTTPS, then DNS SRV records) and can always be edited. Only SSL/TLS or STARTTLS connections with a valid certificate for the server name are allowed; there is no plain-text option and no way to accept an invalid certificate. The password is kept in the Keychain (this device only, never iCloud) and sent only to the account's own servers. Discovery never sends the password or your full address.
-- Refresh tokens in the iOS Keychain, this device only, never iCloud. Access tokens stay in memory.
+- Several accounts: Gmail and Yahoo Mail with an app password, and any other IMAP and SMTP account.
+- Any IMAP and SMTP account with auto-discovery: settings are found from your address (Mozilla autoconfig over HTTPS, then DNS SRV records) and can always be edited. Only SSL/TLS or STARTTLS connections with a valid certificate for the server name are allowed; there is no plain-text option and no way to accept an invalid certificate. The password is kept in the Keychain (this device only, never iCloud) and sent only to the account's own servers. Discovery never sends the password or your full address.
+- Google sign-in (OAuth 2.0 and PKCE in Apple's system sign-in sheet) is hidden for new accounts in the App Store build, because Google requires a paid security assessment for the Gmail scope. Gmail accounts added with Google sign-in in version 1.0 keep working: their refresh tokens stay in the Keychain, this device only, never iCloud, and access tokens stay in memory.
 - HTML mail in a sandbox: no scripts, remote images blocked until you ask, links confirmed before opening.
 - Optional Face ID or passcode lock.
 - Optional PGP (below).
 
-Requested Google permission: `gmail.modify`. It cannot permanently delete mail.
+Requested Google permission, for Google sign-in accounts only: `gmail.modify`. It cannot permanently delete mail.
 
 ## On the Mac
 
-A native SwiftUI Mac app (macOS 14 or later), not an iPad port. It shares all non-UI code with iOS (`Shared/`): the Gmail client, sign-in, Keychain, MIME, PGP and the mail cache. One App Store purchase covers iPhone, iPad and Mac.
+A native SwiftUI Mac app (macOS 14 or later), not an iPad port. It shares all non-UI code with iOS (`Shared/`): the IMAP, SMTP and Gmail clients, sign-in, Keychain, MIME, PGP and the mail cache. One App Store purchase covers iPhone, iPad and Mac.
 
 - Three columns: accounts and labels, conversations, the conversation.
 - Menus and shortcuts: ⌘N new message, ⌘R reply, ⇧⌘R reply all, ⇧⌘F forward, E archive, ⌘⌫ Bin, ⇧⌘U read or unread, ⇧⌘L star, ⌘O open in a new window, ⌘F search, ⇧⌘N get new mail, ⇧⌘D send, ⌘, Settings.
 - Compose in its own window, several at once. Drag files in to attach them; drag attachments out to Finder or into a message; Save Attachment puts a file in any folder you choose, including Google Drive for desktop if it is installed.
 - Checks for new mail on a timer while it is open (every 5 minutes by default), with notifications and the unread count on the Dock icon. Optional Open at Login. No server and no push, so nothing arrives while Aeolet is closed.
-- Same security as iOS: sign-in in Apple's system sheet with PKCE, refresh tokens in the data protection keychain (this Mac only, never iCloud), App Sandbox limited to outgoing network, files you choose and Downloads, Hardened Runtime, and an optional Touch ID or password lock that engages when Aeolet is hidden, the Mac sleeps or the screen locks.
+- Same security as iOS: passwords and refresh tokens in the data protection keychain (this Mac only, never iCloud), App Sandbox limited to outgoing network, files you choose and Downloads, Hardened Runtime, and an optional Touch ID or password lock that engages when Aeolet is hidden, the Mac sleeps or the screen locks.
 
 ## Setup
 
 You need a Mac with Xcode (free, Mac App Store), a Google account, and an iPhone or just the Mac.
+
+The build needs a Google OAuth client ID to start, even though Sign in with Google is hidden. To use your own Google OAuth client for personal use (up to 100 users), set `AppConfig.googleSignInEnabled = true` in `Shared/App/AppConfig.swift`; Add Account then offers Sign in with Google again. With it left `false`, accounts are added with an app password or as IMAP and SMTP, as in the App Store build.
 
 ### 1. Create your Google OAuth client (free)
 
