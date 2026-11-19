@@ -16,7 +16,7 @@ enum AttachmentLimit {
         let what = names.count == 1 ? "\u{201C}\(names[0])\u{201D} is" : "\(names.count) files are"
         let room = max(0, maxTotalBytes - currentTotal)
         let left = room < 1000 ? "this message has no room left" : "this message has \(format(room)) left"
-        return "\(what) too large to add. Gmail allows \(format(maxTotalBytes)) of attachments per message, and \(left). To send something bigger, share a link to it from Files or Google Drive."
+        return "\(what) too large to add. Aeolet allows \(format(maxTotalBytes)) of attachments per message, and \(left). To send something bigger, share a link to it from Files or another storage app."
     }
 }
 

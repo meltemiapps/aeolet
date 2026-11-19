@@ -78,7 +78,7 @@ final class AttachmentTests: XCTestCase {
         model.add([one])
         XCTAssertEqual(model.attachments.count, 2)
         XCTAssertEqual(model.attachmentNotice,
-                       "\u{201C}c.bin\u{201D} is too large to add. Gmail allows 25 MB of attachments per message, and this message has no room left. To send something bigger, share a link to it from Files or Google Drive.")
+                       "\u{201C}c.bin\u{201D} is too large to add. Aeolet allows 25 MB of attachments per message, and this message has no room left. To send something bigger, share a link to it from Files or another storage app.")
     }
 
     @MainActor
