@@ -7,3 +7,33 @@ This product bundles OpenPGP.js (https://github.com/openpgpjs/openpgpjs),
 licensed under the GNU Lesser General Public License v3.0 or later.
 The bundled file Shared/Resources/openpgp-bridge.js is built from PGP/js and
 can be replaced by rebuilding from that source.
+
+This product uses SwiftMail (https://github.com/Cocoanetics/SwiftMail) for IMAP
+and SMTP, licensed under the BSD 2-Clause License:
+
+  Copyright (c) 2025, Oliver Drobnik All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  - Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer. 
+
+  - Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+SwiftMail depends on SwiftNIO, swift-nio-ssl, swift-nio-imap, swift-log,
+swift-collections, swift-atomics and swift-system (Apache License 2.0, Apple
+Inc. and the SwiftNIO project authors) and SwiftCross (MIT License).

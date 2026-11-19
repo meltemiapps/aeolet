@@ -41,6 +41,15 @@ enum MockGmail {
         #if os(iOS)
         if arguments.contains("-AeoletDisableAnimations") { UIView.setAnimationsEnabled(false) }
         #endif
+        // An IMAP account with only its settings stored, for tests of the account list. Its server refuses
+        // connections, so nothing is fetched.
+        if let email = ProcessInfo.processInfo.environment["AEOLET_MOCK_IMAP_ACCOUNT"], !email.isEmpty,
+           AccountStore.mailAccount(email) == nil {
+            var account = MailAccount.defaults(for: email)
+            account.imap.host = "127.0.0.1"; account.imap.port = 9
+            account.smtp.host = "127.0.0.1"; account.smtp.port = 9
+            try? AccountStore.add(account, password: "mock")
+        }
         _ = MockGmailServer.shared
     }
 

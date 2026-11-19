@@ -25,7 +25,10 @@ final class MacSettingsUITests: MacUITestCase {
         launch()
         signInAndWaitForInbox()
         openSettings(tab: "Accounts")
-        settings.buttons["Add Gmail Account"].click()
+        settings.buttons["Add Account…"].click()
+        let google = app.buttons["addAccount.google"]
+        XCTAssertTrue(google.waitForExistence(timeout: 10), "No Google choice in Add Account")
+        google.click()
         waitForLog("TOKEN grant=authorization_code account=\(Self.nikos)")
         XCTAssertTrue(sidebar("INBOX", account: Self.nikos).waitForExistence(timeout: 15), "Second account missing from the sidebar")
         // Opening Nikos's inbox writes his cache.
@@ -52,6 +55,55 @@ final class MacSettingsUITests: MacUITestCase {
             !keychain.contains { $0.hasPrefix("oauth.refresh.") || $0.hasPrefix("pgp.private.") } && cacheFiles.values.allSatisfy { $0 == 0 }
         }
         XCTAssertTrue(app.buttons["Sign in with Google"].waitForExistence(timeout: 10))
+    }
+
+    /// 1.2 without Google sign-in: the first window has one Add Account button, the choices are Gmail, Yahoo Mail
+    /// and Other mail account in that order, and the Gmail form explains how to get an app password.
+    func testNewAccountsAreAddedWithoutGoogleSignIn() {
+        launch(googleSignIn: false)
+        let add = app.buttons["signIn.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), "No Add Account button in the first window")
+        XCTAssertFalse(app.buttons["Sign in with Google"].exists, "Google sign-in is still offered")
+        add.click()
+
+        let gmail = app.buttons["addAccount.gmail"]
+        let yahoo = app.buttons["addAccount.yahoo"]
+        let other = app.buttons["addAccount.manual"]
+        XCTAssertTrue(gmail.waitForExistence(timeout: 10), "No Gmail choice")
+        XCTAssertTrue(yahoo.exists && other.exists)
+        XCTAssertFalse(app.buttons["addAccount.google"].exists, "Google is still a choice")
+        XCTAssertLessThan(gmail.frame.minY, yahoo.frame.minY, "Gmail should come first")
+        XCTAssertLessThan(yahoo.frame.minY, other.frame.minY, "Yahoo Mail should come before Other mail account")
+
+        gmail.click()
+        XCTAssertTrue(element("preset.twoStepLink").waitForExistence(timeout: 5), "No 2-Step Verification step")
+        XCTAssertTrue(element("preset.appPasswordLink").exists, "No link to create an app password")
+    }
+
+    /// A build without a Google client ID opens normally and adds accounts with an app password or IMAP. With
+    /// Google sign-in turned on, the Google option stays hidden and Settings says why.
+    func testBuildWithoutGoogleClientIDOpensWithoutGoogleSignIn() {
+        launch(extra: ["-AeoletNoGoogleClientID"])
+        let add = app.buttons["signIn.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), "No Add Account button in the first window")
+        XCTAssertFalse(app.buttons["Sign in with Google"].exists, "Google sign-in offered without a client ID")
+        add.click()
+        XCTAssertTrue(app.buttons["addAccount.gmail"].waitForExistence(timeout: 10), "No Gmail choice")
+        XCTAssertTrue(app.buttons["addAccount.yahoo"].exists && app.buttons["addAccount.manual"].exists)
+        XCTAssertFalse(app.buttons["addAccount.google"].exists, "Google is a choice without a client ID")
+        app.typeKey(.escape, modifierFlags: [])
+
+        openSettings(tab: "Accounts")
+        let note = element("settings.googleUnavailable")
+        XCTAssertTrue(note.waitForExistence(timeout: 5), "Settings doesn't say why Google sign-in is hidden")
+    }
+
+    /// With a client ID (the App Store build) and Google sign-in off, Settings shows no note.
+    func testSettingsHasNoGoogleNoteWhenSignInIsOff() {
+        launch(googleSignIn: false)
+        openSettings(tab: "Accounts")
+        XCTAssertTrue(settings.buttons["Add Account…"].waitForExistence(timeout: 5))
+        XCTAssertFalse(element("settings.googleUnavailable").exists, "Note shown although nothing is hidden")
     }
 }
 

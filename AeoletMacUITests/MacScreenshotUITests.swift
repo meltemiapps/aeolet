@@ -49,7 +49,10 @@ final class MacScreenshotUITests: MacUITestCase {
         app.typeKey(",", modifierFlags: .command)
         XCTAssertTrue(settings.waitForExistence(timeout: 10))
         settings.toolbars.buttons["Accounts"].click()
-        settings.buttons["Add Gmail Account"].click()
+        settings.buttons["Add Account…"].click()
+        let google = app.buttons["addAccount.google"]
+        XCTAssertTrue(google.waitForExistence(timeout: 10), "No Google choice in Add Account")
+        google.click()
         waitForLog("TOKEN grant=authorization_code account=\(Self.nikos)")
         settings.toolbars.buttons["Encryption"].click()
         element("enable-pgp", in: settings).click()

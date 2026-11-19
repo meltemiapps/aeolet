@@ -3,7 +3,7 @@ import XCTest
 final class MacMailboxUITests: MacUITestCase {
     func testSignInShowsThreeColumnsAndLabels() {
         launch()
-        XCTAssertTrue(app.staticTexts["Open-source Gmail, private by design."].waitForExistence(timeout: 15), "Expected a fresh install")
+        XCTAssertTrue(app.staticTexts["Open-source mail, private by design."].waitForExistence(timeout: 15), "Expected a fresh install")
         signInAndWaitForInbox()
         waitForLog("GET /profile account=\(Self.elena)")
         for subject in ["Your ferry tickets: Piraeus to Naxos", "Photos from the weekend", "Confidential: contract draft"] {

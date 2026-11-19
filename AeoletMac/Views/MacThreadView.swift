@@ -37,7 +37,7 @@ struct MacThreadView: View {
                     .help("Archive (E)")
                 Button { Task { await window.trash() } } label: { Label("Bin", systemImage: "trash") }
                     .help("Move to Bin (⌘⌫)")
-                labelMenu
+                if model.supportsLabels { labelMenu }
                 Button { window.compose(.reply) } label: { Label("Reply", systemImage: "arrowshape.turn.up.left") }
                     .help("Reply (⌘R)")
                     .disabled(!window.canReply)

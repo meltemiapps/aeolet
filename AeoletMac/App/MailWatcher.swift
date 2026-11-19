@@ -47,7 +47,7 @@ final class MailWatcher: ObservableObject {
     }
 
     func check() async {
-        guard app != nil, !(await TokenStore.shared.accounts()).isEmpty else {
+        guard app != nil, !(await AccountStore.allAccounts()).isEmpty else {
             NSApp.dockTile.badgeLabel = nil
             return
         }
@@ -61,8 +61,8 @@ final class MailWatcher: ObservableObject {
     /// The Dock shows unread inbox conversations across every account.
     func updateBadge() async {
         var total = 0
-        for account in await TokenStore.shared.accounts() {
-            if let inbox = try? await GmailClient(account: account).label("INBOX") {
+        for account in await AccountStore.allAccounts() {
+            if let inbox = try? await MailServices.service(for: account).label("INBOX") {
                 total += inbox.threadsUnread ?? inbox.messagesUnread ?? 0
             }
         }

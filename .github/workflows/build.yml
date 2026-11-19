@@ -15,12 +15,16 @@ jobs:
           npx playwright install --with-deps chromium
           npm test
   ios:
-    runs-on: macos-15-intel
+    # Pushes to this repository's branches run on the project's own Mac (a self-hosted runner). Pull requests,
+    # including any from forks, never do: they stay on GitHub-hosted runners, and outside contributors'
+    # workflows need the maintainer's approval before they start.
+    runs-on: ${{ github.event_name == 'push' && fromJSON('["self-hosted", "macOS", "aeolet"]') || 'macos-15' }}
     steps:
       - uses: actions/checkout@v5
       - name: Unit and UI tests (UI tests run against the in-app mock Gmail server)
         run: |
-          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k in sorted(d, reverse=True) if 'iOS' in k for x in d[k] if 'iPhone' in x['name']))")
+          # iPhone 17 Pro on the newest released (non-beta) iOS runtime; the script prints which.
+          DEVICE=$(python3 Scripts/ci-simulator.py)
           # Boot first and wait until fully up: a cold boot inside the test run can time out UI test start-up.
           xcrun simctl boot "$DEVICE" || true
           xcrun simctl bootstatus "$DEVICE" -b
@@ -40,7 +44,10 @@ jobs:
           path: TestResults.xcresult
           if-no-files-found: ignore
   mac:
-    runs-on: macos-15-intel
+    # Pushes to this repository's branches run on the project's own Mac (a self-hosted runner). Pull requests,
+    # including any from forks, never do: they stay on GitHub-hosted runners, and outside contributors'
+    # workflows need the maintainer's approval before they start.
+    runs-on: ${{ github.event_name == 'push' && fromJSON('["self-hosted", "macOS", "aeolet"]') || 'macos-15' }}
     steps:
       - uses: actions/checkout@v5
       - name: Mac unit and UI tests (UI tests run against the in-app mock Gmail server)

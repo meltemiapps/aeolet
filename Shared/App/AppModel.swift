@@ -21,7 +21,7 @@ final class AppModel: ObservableObject {
     }
 
     private func load() async {
-        accounts = await TokenStore.shared.accounts()
+        accounts = await AccountStore.allAccounts()
         let last = AppDefaults.store.string(forKey: "lastAccount") ?? ""
         currentAccount = accounts.contains(last) ? last : accounts.first
         isLocked = requireDeviceAuth
@@ -41,8 +41,15 @@ final class AppModel: ObservableObject {
         do {
             let tokens = try await signInFlow.signIn()
             let email = try await Self.resolveEmail(accessToken: tokens.accessToken)
+            // The same address can't also be an IMAP/app-password account: the new grant is revoked at Google,
+            // as sign-out does, and nothing is saved.
+            guard AccountStore.mailAccount(email) == nil else {
+                await GoogleOAuth.revoke(tokens.refreshToken ?? tokens.accessToken)
+                errorMessage = "This address is already in Aeolet."
+                return
+            }
             try await TokenStore.shared.add(account: email, tokens: tokens)
-            accounts = await TokenStore.shared.accounts()
+            accounts = await AccountStore.allAccounts()
             select(email)
             await BackgroundSync.establishBaseline(account: email)
             await BackgroundSync.requestNotificationPermission()
@@ -62,12 +69,43 @@ final class AppModel: ObservableObject {
         return try GmailClient.decode(GmailProfile.self, from: data).emailAddress
     }
 
+    /// Adds an IMAP/SMTP account after proving the settings work: logs in to the IMAP server and to the SMTP
+    /// server, both over TLS. Only then are the settings and the password stored, in the Keychain.
+    func addMailAccount(_ account: MailAccount, password: String) async throws {
+        var account = account
+        account.email = account.email.trimmingCharacters(in: .whitespacesAndNewlines)
+        account.username = account.username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let password = account.provider.normalisedPassword(password)
+        guard account.isValid, !password.isEmpty else { throw AccountError.invalidSettings }
+        guard !accounts.contains(where: { $0.lowercased() == account.id }) else { throw AccountError.alreadyAdded(account.email) }
+
+        let imap = try await IMAPLogin.connect(account, password: password)
+        try? await imap.disconnect()
+        let smtp = try await SMTPSender.connect(account, password: password)
+        try? await smtp.disconnect()
+
+        try AccountStore.add(account, password: password)
+        accounts = await AccountStore.allAccounts()
+        select(account.email)
+        await BackgroundSync.establishBaseline(account: account.email)
+        await BackgroundSync.requestNotificationPermission()
+    }
+
+    /// Whether the account signs in with Google (and so is revoked at Google when it signs out).
+    func isGoogleAccount(_ account: String) -> Bool { AccountStore.mailAccount(account) == nil }
+
     func signOut(_ account: String) async {
-        await TokenStore.shared.remove(account: account)
+        if AccountStore.mailAccount(account) != nil {
+            await IMAPSessionPool.close(account)
+            await IMAPRawCache.shared.removeAll()
+            AccountStore.remove(account)
+        } else {
+            await TokenStore.shared.remove(account: account)
+        }
         PGPStore.shared.deleteOwnKey(account: account)
         MailCache.deleteAll(account: account)
         BackgroundSync.forget(account: account)
-        accounts = await TokenStore.shared.accounts()
+        accounts = await AccountStore.allAccounts()
         if currentAccount == account { currentAccount = accounts.first }
         if accounts.isEmpty { PrivateFile.deleteAll() }
     }

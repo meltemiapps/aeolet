@@ -53,7 +53,7 @@ enum PGPKind: Hashable {
 final class ThreadModel: ObservableObject {
     let account: String
     let threadID: String
-    private let client: GmailClient
+    private let client: any MailService
     private let pgp = PGPStore.shared
 
     @Published var messages: [ThreadMessage] = []
@@ -69,10 +69,12 @@ final class ThreadModel: ObservableObject {
     init(account: String, threadID: String) {
         self.account = account
         self.threadID = threadID
-        client = GmailClient(account: account)
+        client = MailServices.service(for: account)
     }
 
     var subject: String { messages.first?.subject ?? "" }
+
+    var supportsLabels: Bool { client.features.labels }
 
     func load() async {
         guard messages.isEmpty else { return }

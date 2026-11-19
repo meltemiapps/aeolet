@@ -34,14 +34,7 @@ struct MainWindow: View {
 
     @ViewBuilder
     private var content: some View {
-        if !AppConfig.isConfigured {
-            ContentUnavailableView {
-                Label("Google client ID needed", systemImage: "key")
-            } description: {
-                Text("Add your own Google OAuth client ID to Config.xcconfig and rebuild. The README has the steps.")
-            }
-            .frame(minWidth: 600, minHeight: 400)
-        } else if !app.isLoaded {
+        if !app.isLoaded {
             ProgressView().frame(minWidth: 600, minHeight: 400)
         } else if app.accounts.isEmpty {
             MacSignInView()
@@ -99,6 +92,7 @@ struct MailSplitView: View {
 struct SidebarView: View {
     @ObservedObject var window: MailWindowModel
     @EnvironmentObject private var app: AppModel
+    @State private var showAddAccount = false
 
     var body: some View {
         List(selection: $window.selection) {
@@ -115,12 +109,13 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
             Button {
-                Task { await app.signIn() }
+                showAddAccount = true
             } label: {
                 Label("Add Account", systemImage: "plus")
             }
             .buttonStyle(.borderless)
             .disabled(app.isSigningIn)
+            .sheet(isPresented: $showAddAccount) { AddAccountView() }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -290,8 +285,12 @@ struct MacThreadRow: View {
 
 // MARK: - Sign-in
 
+/// The first-run window. Without Google sign-in it offers one Add Account button, which opens the same choices
+/// as Settings: Gmail, Yahoo Mail and Other mail account.
 struct MacSignInView: View {
     @EnvironmentObject private var app: AppModel
+    @State private var showManual = false
+    @State private var showAddAccount = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -300,25 +299,43 @@ struct MacSignInView: View {
                 .foregroundStyle(Theme.aegean)
             VStack(spacing: 6) {
                 Text("Aeolet").font(.largeTitle.bold())
-                Text("Open-source Gmail, private by design.").foregroundStyle(.secondary)
+                Text("Open-source mail, private by design.").foregroundStyle(.secondary)
             }
-            Button {
-                Task { await app.signIn() }
-            } label: {
-                Group {
-                    if app.isSigningIn { ProgressView().controlSize(.small) } else { Text("Sign in with Google") }
+            if AppConfig.offersGoogleSignIn {
+                Button {
+                    Task { await app.signIn() }
+                } label: {
+                    Group {
+                        if app.isSigningIn { ProgressView().controlSize(.small) } else { Text("Sign in with Google") }
+                    }
+                    .frame(width: 220)
                 }
-                .frame(width: 220)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(app.isSigningIn)
+                Button { showManual = true } label: { Text("Other Mail Account…").frame(width: 220) }
+                    .controlSize(.large)
+                    .accessibilityIdentifier("signIn.other")
+                Text("With Google, your password goes only to Google and Aeolet receives a revocable token. For other accounts, your password is stored only in this Mac's Keychain and sent only to your mail server.")
+                    .font(.footnote)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: 380)
+            } else {
+                Button { showAddAccount = true } label: { Text("Add Account…").frame(width: 220) }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityIdentifier("signIn.add")
+                Text("Gmail, Yahoo Mail or any mail account with IMAP and SMTP. Your password is stored only in this Mac's Keychain and sent only to your mail server.")
+                    .font(.footnote)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: 380)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(app.isSigningIn)
-            Text("Your password goes only to Google. Aeolet receives a revocable token, stored in this Mac's Keychain.")
-                .font(.footnote)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: 360)
         }
+        .sheet(isPresented: $showManual) { ManualAccountSheet() }
+        .sheet(isPresented: $showAddAccount) { AddAccountView() }
+        .onChange(of: app.accounts) { _, _ in showAddAccount = false }
         .padding(40)
         .frame(minWidth: 640, minHeight: 460)
     }

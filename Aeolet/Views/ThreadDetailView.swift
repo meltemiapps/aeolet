@@ -44,7 +44,7 @@ struct ThreadDetailView: View {
                 Button { Task { await act { try await model.trash() } } } label: { Image(systemName: "trash") }
                     .accessibilityLabel("Bin")
                 Spacer()
-                labelMenu
+                if model.supportsLabels { labelMenu }
                 Spacer()
                 Button {
                     if let last = model.messages.last { compose = ComposeContext(mode: .reply, source: last) }

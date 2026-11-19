@@ -36,9 +36,15 @@ struct SettingsView: View {
                 } footer: {
                     Text("Optional. Uses standard OpenPGP, so it works with GnuPG, Thunderbird and Proton Mail users.")
                 }
-                Section("Accounts") {
+                Section {
                     ForEach(app.accounts, id: \.self) { account in
                         Button(account, role: .destructive) { accountToRemove = account }
+                    }
+                } header: {
+                    Text("Accounts")
+                } footer: {
+                    if let note = AppConfig.googleSignInUnavailableNote {
+                        Text(note).accessibilityIdentifier("settings.googleUnavailable")
                     }
                 }
                 Section("About") {
@@ -53,7 +59,7 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
-            .confirmationDialog("Sign out and revoke access?", isPresented: Binding(
+            .confirmationDialog(signOutTitle, isPresented: Binding(
                 get: { accountToRemove != nil },
                 set: { if !$0 { accountToRemove = nil } }
             ), titleVisibility: .visible) {
@@ -62,20 +68,28 @@ struct SettingsView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Revokes this app's access at Google and deletes the account's tokens and PGP private key from this iPhone. Back up your PGP key first.")
+                Text(signOutMessage)
             }
         }
+    }
+}
+
+extension SettingsView {
+    private var removingGoogle: Bool { accountToRemove.map(app.isGoogleAccount) ?? true }
+
+    var signOutTitle: String { removingGoogle ? "Sign out and revoke access?" : "Remove this account?" }
+
+    var signOutMessage: String {
+        removingGoogle
+            ? "Revokes this app's access at Google and deletes the account's tokens and PGP private key from this iPhone. Back up your PGP key first."
+            : "Deletes the account's password, settings, cached mail list and PGP private key from this iPhone. Your mail stays on the server. Back up your PGP key first."
     }
 }
 
 struct LicensesView: View {
     var body: some View {
         ScrollView {
-            Text("""
-            Aeolet is licensed under the Apache License 2.0.
-
-            OpenPGP.js is licensed under the GNU Lesser General Public License v3.0 or later. Source: github.com/openpgpjs/openpgpjs. You may replace the bundled library by rebuilding from PGP/js in this project's source code.
-            """)
+            Text(OpenSourceNotices.text)
             .font(.footnote)
             .padding()
         }

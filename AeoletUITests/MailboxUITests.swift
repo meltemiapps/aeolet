@@ -3,7 +3,7 @@ import XCTest
 final class MailboxUITests: AeoletUITestCase {
     func testSignInLoadsInboxAndPullToRefreshFetchesNewMail() throws {
         launch()
-        XCTAssertTrue(app.staticTexts["Open-source Gmail, private by design."].waitForExistence(timeout: 10), "Expected a fresh install")
+        XCTAssertTrue(app.staticTexts["Open-source mail, private by design."].waitForExistence(timeout: 10), "Expected a fresh install")
         signInAndWaitForInbox()
 
         waitForLog("GET /profile account=\(Self.elena)")

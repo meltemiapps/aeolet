@@ -30,9 +30,7 @@ struct RootView: View {
 
     @ViewBuilder
     private var content: some View {
-        if !AppConfig.isConfigured {
-            SetupRequiredView()
-        } else if !app.isLoaded {
+        if !app.isLoaded {
             ProgressView()
         } else if let account = app.currentAccount {
             MailboxView(account: account).id(account)
@@ -83,18 +81,12 @@ final class LockOverlay {
     }
 }
 
-struct SetupRequiredView: View {
-    var body: some View {
-        ContentUnavailableView {
-            Label("Google client ID needed", systemImage: "key")
-        } description: {
-            Text("Add your own Google OAuth client ID to Config.xcconfig and rebuild. The README has the steps.")
-        }
-    }
-}
-
+/// The first-run screen. Without Google sign-in it offers one Add Account button, which opens the same choices
+/// as the sidebar: Gmail, Yahoo Mail and Other mail account.
 struct SignInView: View {
     @EnvironmentObject private var app: AppModel
+    @State private var showManual = false
+    @State private var showAddAccount = false
 
     var body: some View {
         VStack(spacing: 28) {
@@ -104,28 +96,49 @@ struct SignInView: View {
                 .foregroundStyle(Theme.aegean)
             VStack(spacing: 8) {
                 Text("Aeolet").font(.largeTitle.bold())
-                Text("Open-source Gmail, private by design.").foregroundStyle(.secondary)
+                Text("Open-source mail, private by design.").foregroundStyle(.secondary)
             }
             Spacer()
             VStack(spacing: 12) {
-                Button {
-                    Task { await app.signIn() }
-                } label: {
-                    Group {
-                        if app.isSigningIn { ProgressView() } else { Text("Sign in with Google") }
+                if AppConfig.offersGoogleSignIn {
+                    Button {
+                        Task { await app.signIn() }
+                    } label: {
+                        Group {
+                            if app.isSigningIn { ProgressView() } else { Text("Sign in with Google") }
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(app.isSigningIn)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(app.isSigningIn)
 
-                Text("Your password goes only to Google. Aeolet receives a revocable token, stored in this device's Keychain.")
-                    .font(.footnote)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+                    Button("Other Mail Account") { showManual = true }
+                        .controlSize(.large)
+                        .accessibilityIdentifier("signIn.other")
+
+                    Text("With Google, your password goes only to Google and Aeolet receives a revocable token. For other accounts, your password is stored only in this device's Keychain and sent only to your mail server.")
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button { showAddAccount = true } label: {
+                        Text("Add Account").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityIdentifier("signIn.add")
+
+                    Text("Gmail, Yahoo Mail or any mail account with IMAP and SMTP. Your password is stored only in this device's Keychain and sent only to your mail server.")
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(24)
+        .sheet(isPresented: $showManual) { ManualAccountSheet() }
+        .sheet(isPresented: $showAddAccount) { AddAccountView() }
+        .onChange(of: app.accounts) { _, _ in showAddAccount = false }
     }
 }
