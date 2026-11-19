@@ -79,6 +79,32 @@ final class MacSettingsUITests: MacUITestCase {
         XCTAssertTrue(element("preset.twoStepLink").waitForExistence(timeout: 5), "No 2-Step Verification step")
         XCTAssertTrue(element("preset.appPasswordLink").exists, "No link to create an app password")
     }
+
+    /// A build without a Google client ID opens normally and adds accounts with an app password or IMAP. With
+    /// Google sign-in turned on, the Google option stays hidden and Settings says why.
+    func testBuildWithoutGoogleClientIDOpensWithoutGoogleSignIn() {
+        launch(extra: ["-AeoletNoGoogleClientID"])
+        let add = app.buttons["signIn.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), "No Add Account button in the first window")
+        XCTAssertFalse(app.buttons["Sign in with Google"].exists, "Google sign-in offered without a client ID")
+        add.click()
+        XCTAssertTrue(app.buttons["addAccount.gmail"].waitForExistence(timeout: 10), "No Gmail choice")
+        XCTAssertTrue(app.buttons["addAccount.yahoo"].exists && app.buttons["addAccount.manual"].exists)
+        XCTAssertFalse(app.buttons["addAccount.google"].exists, "Google is a choice without a client ID")
+        app.typeKey(.escape, modifierFlags: [])
+
+        openSettings(tab: "Accounts")
+        let note = element("settings.googleUnavailable")
+        XCTAssertTrue(note.waitForExistence(timeout: 5), "Settings doesn't say why Google sign-in is hidden")
+    }
+
+    /// With a client ID (the App Store build) and Google sign-in off, Settings shows no note.
+    func testSettingsHasNoGoogleNoteWhenSignInIsOff() {
+        launch(googleSignIn: false)
+        openSettings(tab: "Accounts")
+        XCTAssertTrue(settings.buttons["Add Account…"].waitForExistence(timeout: 5))
+        XCTAssertFalse(element("settings.googleUnavailable").exists, "Note shown although nothing is hidden")
+    }
 }
 
 final class MacErrorUITests: MacUITestCase {

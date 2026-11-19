@@ -28,24 +28,26 @@ A native SwiftUI Mac app (macOS 14 or later), not an iPad port. It shares all no
 
 ## Setup
 
-You need a Mac with Xcode (free, Mac App Store), a Google account, and an iPhone or just the Mac.
+You need a Mac with Xcode (free, Mac App Store) and an iPhone, or just the Mac.
 
-The build needs a Google OAuth client ID to start, even though Sign in with Google is hidden. To use your own Google OAuth client for personal use (up to 100 users), set `AppConfig.googleSignInEnabled = true` in `Shared/App/AppConfig.swift`; Add Account then offers Sign in with Google again. With it left `false`, accounts are added with an app password or as IMAP and SMTP, as in the App Store build.
+A Google OAuth client is optional. Without one, the app opens normally and adds Gmail and Yahoo Mail with an app password, or any IMAP and SMTP account, as the App Store build does: set `GOOGLE_CLIENT_PREFIX` in `Config.xcconfig` to nothing (it ships with Meltemi Apps' client, which only works with Meltemi Apps' bundle ID) and go straight to Build.
 
-### 1. Create your Google OAuth client (free)
+Only Sign in with Google needs a client. To use your own Google OAuth client for personal use (up to 100 users), create it as below, set `GOOGLE_CLIENT_PREFIX`, and set `AppConfig.googleSignInEnabled = true` in `Shared/App/AppConfig.swift`; Add Account then offers Sign in with Google. If the flag is on but no client ID is set, the Google option stays hidden and Settings says why.
+
+### 1. Optional: create your Google OAuth client (free)
 
 1. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Gmail API**.
 2. Under **Google Auth Platform**, set Audience to **External**, and add the scope `https://www.googleapis.com/auth/gmail.modify` under **Data Access**.
-3. Under **Clients**, create an **iOS** client with bundle ID `com.meltemiapps.aeolet`.
+3. Under **Clients**, create an **iOS** client with your bundle ID (`com.meltemiapps.aeolet` unless you change it).
 4. Under **Audience**, choose **Publish app**. Leaving it in Testing makes Google expire your sign-in every 7 days. No verification is needed for your own use, up to 100 users; you will click through an "unverified app" warning at sign-in.
 
 ### 2. Build
 
-1. Open `Config.xcconfig`. Set `GOOGLE_CLIENT_PREFIX` to the part of the client ID before `.apps.googleusercontent.com`.
+1. Open `Config.xcconfig`. Set `GOOGLE_CLIENT_PREFIX` to the part of your client ID before `.apps.googleusercontent.com`, or to nothing if you skipped step 1.
 2. Open `Aeolet.xcodeproj`.
-3. Select the Aeolet target, then **Signing & Capabilities**, and choose your team. If the bundle ID is taken for your team, change it in `Config.xcconfig` and in the Google client.
+3. Select the Aeolet target, then **Signing & Capabilities**, and choose your team. If the bundle ID is taken for your team, change it in `Config.xcconfig` (and in your Google client, if you made one).
 4. Plug in your iPhone and press Run. Enable Developer Mode on the phone when iOS asks.
-5. For the Mac, choose the **AeoletMac** scheme and **My Mac**, then Run. The Mac app uses the same iOS client ID. Xcode registers your Mac with your team the first time, because the data protection keychain needs a provisioning profile.
+5. For the Mac, choose the **AeoletMac** scheme and **My Mac**, then Run. The Mac app uses the same iOS client ID, if there is one. Xcode registers your Mac with your team the first time, because the data protection keychain needs a provisioning profile.
 
 With a free Apple account the app stops opening after 7 days until you run it from Xcode again. The paid Apple Developer Program removes that limit and adds TestFlight.
 
@@ -86,7 +88,7 @@ Mac UI tests need UI automation, which macOS turns on after asking for your pass
 
 ### Mock Gmail
 
-Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install (of the mock's own data, on a Mac), and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. Compose's Photo Library and Files pick fixtures, chosen with `AEOLET_MOCK_PHOTOS` and `AEOLET_MOCK_FILES`, unless `-AeoletRealPickers` opens Apple's pickers. None of it is compiled into Release builds.
+Debug builds launched with `-AeoletMockGmail` answer every Google request from an in-memory Gmail with two fictional accounts and about 30 threads (`Aeolet/Debug`). Sign-in skips Google's page but still goes through the token exchange. `-AeoletResetState` starts from a clean install (of the mock's own data, on a Mac), `-AeoletOfferGoogleSignIn` shows Sign in with Google, `-AeoletNoGoogleClientID` acts as a build without a client ID, and `AEOLET_MOCK_FAULT` (`401`, `403`, `429`, `500`, `missingField`, `offline`) simulates failures. Compose's Photo Library and Files pick fixtures, chosen with `AEOLET_MOCK_PHOTOS` and `AEOLET_MOCK_FILES`, unless `-AeoletRealPickers` opens Apple's pickers. None of it is compiled into Release builds.
 
 ## Security
 

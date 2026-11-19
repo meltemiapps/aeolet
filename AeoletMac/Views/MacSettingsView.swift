@@ -104,6 +104,12 @@ private struct AccountsSettings: View {
                 }
                 .disabled(app.isSigningIn)
                 .sheet(isPresented: $showAddAccount) { AddAccountView() }
+            } footer: {
+                if let note = AppConfig.googleSignInUnavailableNote {
+                    Text(note)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("settings.googleUnavailable")
+                }
             }
         }
         .formStyle(.grouped)

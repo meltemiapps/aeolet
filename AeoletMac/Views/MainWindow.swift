@@ -34,14 +34,7 @@ struct MainWindow: View {
 
     @ViewBuilder
     private var content: some View {
-        if !AppConfig.isConfigured {
-            ContentUnavailableView {
-                Label("Google client ID needed", systemImage: "key")
-            } description: {
-                Text("Add your own Google OAuth client ID to Config.xcconfig and rebuild. The README has the steps.")
-            }
-            .frame(minWidth: 600, minHeight: 400)
-        } else if !app.isLoaded {
+        if !app.isLoaded {
             ProgressView().frame(minWidth: 600, minHeight: 400)
         } else if app.accounts.isEmpty {
             MacSignInView()

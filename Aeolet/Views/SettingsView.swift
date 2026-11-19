@@ -36,9 +36,15 @@ struct SettingsView: View {
                 } footer: {
                     Text("Optional. Uses standard OpenPGP, so it works with GnuPG, Thunderbird and Proton Mail users.")
                 }
-                Section("Accounts") {
+                Section {
                     ForEach(app.accounts, id: \.self) { account in
                         Button(account, role: .destructive) { accountToRemove = account }
+                    }
+                } header: {
+                    Text("Accounts")
+                } footer: {
+                    if let note = AppConfig.googleSignInUnavailableNote {
+                        Text(note).accessibilityIdentifier("settings.googleUnavailable")
                     }
                 }
                 Section("About") {

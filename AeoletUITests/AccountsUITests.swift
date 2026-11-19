@@ -168,6 +168,34 @@ final class AccountsUITests: AeoletUITestCase {
         XCTAssertTrue(anyText(containing: "myaccount.google.com/apppasswords").exists)
     }
 
+    /// A build without a Google client ID opens normally and adds accounts with an app password or IMAP. With
+    /// Google sign-in turned on, the Google option stays hidden and Settings says why.
+    func testBuildWithoutGoogleClientIDOpensWithoutGoogleSignIn() {
+        launch(arguments: ["-AeoletNoGoogleClientID"])
+        let add = app.buttons["signIn.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), "No Add Account button on the first-run screen")
+        XCTAssertFalse(app.buttons["Sign in with Google"].exists, "Google sign-in offered without a client ID")
+        add.tap()
+        XCTAssertTrue(app.buttons["addAccount.gmail"].waitForExistence(timeout: 10), "No Gmail choice")
+        XCTAssertTrue(app.buttons["addAccount.yahoo"].exists && app.buttons["addAccount.manual"].exists)
+        XCTAssertFalse(app.buttons["addAccount.google"].exists, "Google is a choice without a client ID")
+        app.terminate()
+
+        launch(arguments: ["-AeoletNoGoogleClientID"], environment: ["AEOLET_MOCK_IMAP_ACCOUNT": Self.elena])
+        openSettings()
+        let note = app.staticTexts["settings.googleUnavailable"]
+        XCTAssertTrue(note.waitForExistence(timeout: 5), "Settings doesn't say why Google sign-in is hidden")
+        XCTAssertTrue(note.label.contains("no Google client ID"), note.label)
+    }
+
+    /// With a client ID (the App Store build) and Google sign-in off, Settings shows no note.
+    func testSettingsHasNoGoogleNoteWhenSignInIsOff() {
+        launch(googleSignIn: false, environment: ["AEOLET_MOCK_IMAP_ACCOUNT": Self.elena])
+        openSettings()
+        XCTAssertTrue(app.staticTexts["Accounts"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["settings.googleUnavailable"].exists, "Note shown although nothing is hidden")
+    }
+
     /// An account signed in with Google in 1.0 keeps working once the option is hidden, and Add Account then
     /// offers no Google choice.
     func testGoogleAccountFromVersionOneKeepsWorking() {

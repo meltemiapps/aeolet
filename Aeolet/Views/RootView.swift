@@ -30,9 +30,7 @@ struct RootView: View {
 
     @ViewBuilder
     private var content: some View {
-        if !AppConfig.isConfigured {
-            SetupRequiredView()
-        } else if !app.isLoaded {
+        if !app.isLoaded {
             ProgressView()
         } else if let account = app.currentAccount {
             MailboxView(account: account).id(account)
@@ -79,16 +77,6 @@ final class LockOverlay {
         }
         for other in scene.windows where other !== window {
             other.accessibilityElementsHidden = covered
-        }
-    }
-}
-
-struct SetupRequiredView: View {
-    var body: some View {
-        ContentUnavailableView {
-            Label("Google client ID needed", systemImage: "key")
-        } description: {
-            Text("Add your own Google OAuth client ID to Config.xcconfig and rebuild. The README has the steps.")
         }
     }
 }
