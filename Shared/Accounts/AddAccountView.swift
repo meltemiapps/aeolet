@@ -1,8 +1,9 @@
 import SwiftMail
 import SwiftUI
 
-/// "Add account": Google through its own sign-in page, Gmail or Yahoo with an app password, or any mail
-/// account over IMAP and SMTP.
+/// "Add account": Gmail or Yahoo with an app password, or any mail account over IMAP and SMTP. Sign in with
+/// Google appears only while AppConfig.offersGoogleSignIn is on; accounts already signed in with Google keep
+/// working either way.
 struct AddAccountView: View {
     @EnvironmentObject private var app: AppModel
     @Environment(\.dismiss) private var dismiss
@@ -19,24 +20,27 @@ struct AddAccountView: View {
         NavigationStack(path: $path) {
             Form {
                 Section {
-                    Button {
-                        Task {
-                            let before = app.accounts.count
-                            googleError = nil
-                            await app.signIn()
-                            googleError = app.errorMessage
-                            app.errorMessage = nil
-                            if app.accounts.count > before { dismiss() }
+                    if AppConfig.offersGoogleSignIn {
+                        Button {
+                            Task {
+                                let before = app.accounts.count
+                                googleError = nil
+                                await app.signIn()
+                                googleError = app.errorMessage
+                                app.errorMessage = nil
+                                if app.accounts.count > before { dismiss() }
+                            }
+                        } label: {
+                            AccountTypeRow(title: "Google (Recommended)", detail: "For Gmail and Google Workspace. You sign in on Google's own page.",
+                                           symbol: "g.circle")
                         }
-                    } label: {
-                        AccountTypeRow(title: "Google (Recommended)", detail: "For Gmail and Google Workspace. You sign in on Google's own page.",
-                                       symbol: "g.circle")
+                        .disabled(app.isSigningIn)
+                        .accessibilityIdentifier("addAccount.google")
                     }
-                    .disabled(app.isSigningIn)
-                    .accessibilityIdentifier("addAccount.google")
 
                     Button { path = [.preset(.gmail)] } label: {
-                        AccountTypeRow(title: "Gmail with an app password", detail: "Gmail over IMAP and SMTP. Needs 2-Step Verification and an app password.",
+                        AccountTypeRow(title: AppConfig.offersGoogleSignIn ? "Gmail with an app password" : "Gmail",
+                                       detail: "With an app password. Needs 2-Step Verification on your Google account.",
                                        symbol: "key")
                     }
                     .accessibilityIdentifier("addAccount.gmail")
@@ -56,7 +60,9 @@ struct AddAccountView: View {
                     if let googleError {
                         Text(googleError).foregroundStyle(.red).accessibilityIdentifier("addAccount.error")
                     }
-                    Text("With Google, Aeolet never sees your password. For other accounts, your password is stored only in this device's Keychain and sent only to your mail server.")
+                    Text(AppConfig.offersGoogleSignIn
+                         ? "With Google, Aeolet never sees your password. For other accounts, your password is stored only in this device's Keychain and sent only to your mail server."
+                         : "Your password is stored only in this device's Keychain and sent only to your mail server, over an encrypted connection.")
                 }
             }
             .formStyle(.grouped)
@@ -275,6 +281,32 @@ private struct AppPasswordNote: View {
     }
 }
 
+/// How to get a Gmail app password, step by step, with links to Google's own pages.
+private struct GmailAppPasswordSteps: View {
+    var body: some View {
+        Section {
+            step(1, "Turn on 2-Step Verification for your Google account. App passwords need it.")
+            Link("Open 2-Step Verification", destination: URL(string: "https://myaccount.google.com/signinoptions/twosv")!)
+                .accessibilityIdentifier("preset.twoStepLink")
+            step(2, "Create an app password at myaccount.google.com/apppasswords. Give it a name, such as Aeolet, and choose Create.")
+            Link("Create a Google app password", destination: MailAccount.Provider.gmail.appPasswordURL!)
+                .accessibilityIdentifier("preset.appPasswordLink")
+            step(3, "Copy the 16-letter password Google shows, then enter your Gmail address and that app password below. Spaces don't matter.")
+        } header: {
+            Text("Get an app password")
+        }
+    }
+
+    private func step(_ number: Int, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("\(number).").monospacedDigit().foregroundStyle(.secondary)
+            Text(text)
+        }
+        .font(.callout)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 /// Gmail or Yahoo with an app password: the servers are fixed, so only the address, name and app password
 /// are asked for. Both servers must accept the password before the account is added.
 struct PresetAccountView: View {
@@ -297,6 +329,7 @@ struct PresetAccountView: View {
 
     var body: some View {
         Form {
+            if provider == .gmail { GmailAppPasswordSteps() }
             Section {
                 TextField("Email address", text: $email, prompt: Text(provider == .gmail ? "name@gmail.com" : "name@yahoo.com"))
                     .textContentType(.emailAddress)
@@ -317,7 +350,11 @@ struct PresetAccountView: View {
                 Text("App password")
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    AppPasswordNote(provider: provider)
+                    if provider == .gmail {
+                        Text("Use the app password from step 2, not your Google password.")
+                    } else {
+                        AppPasswordNote(provider: provider)
+                    }
                     Text("Stored only in this device's Keychain and sent only to \(provider.name), always over an encrypted connection with a verified certificate.")
                 }
             }

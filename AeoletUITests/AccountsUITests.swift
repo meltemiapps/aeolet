@@ -142,4 +142,45 @@ final class AccountsUITests: AeoletUITestCase {
         waitForLog("REVOKE token=mock-refresh-\(Self.elena)")
         XCTAssertTrue(google.exists, "Add Account closed although nothing was added")
     }
+
+    /// 1.2 without Google sign-in: the first-run screen has one Add Account button, the choices are Gmail, Yahoo
+    /// Mail and Other mail account in that order, and the Gmail form explains how to get an app password.
+    func testNewAccountsAreAddedWithoutGoogleSignIn() {
+        launch(googleSignIn: false)
+        let add = app.buttons["signIn.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), "No Add Account button on the first-run screen")
+        XCTAssertFalse(app.buttons["Sign in with Google"].exists, "Google sign-in is still offered")
+        add.tap()
+
+        let gmail = app.buttons["addAccount.gmail"]
+        let yahoo = app.buttons["addAccount.yahoo"]
+        let other = app.buttons["addAccount.manual"]
+        XCTAssertTrue(gmail.waitForExistence(timeout: 10), "No Gmail choice")
+        XCTAssertTrue(yahoo.exists && other.exists)
+        XCTAssertFalse(app.buttons["addAccount.google"].exists, "Google is still a choice")
+        XCTAssertLessThan(gmail.frame.minY, yahoo.frame.minY, "Gmail should come first")
+        XCTAssertLessThan(yahoo.frame.minY, other.frame.minY, "Yahoo Mail should come before Other mail account")
+        XCTAssertTrue(gmail.label.hasPrefix("Gmail"))
+
+        gmail.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["preset.twoStepLink"].waitForExistence(timeout: 5), "No 2-Step Verification step")
+        XCTAssertTrue(app.descendants(matching: .any)["preset.appPasswordLink"].exists, "No link to create an app password")
+        XCTAssertTrue(anyText(containing: "myaccount.google.com/apppasswords").exists)
+    }
+
+    /// An account signed in with Google in 1.0 keeps working once the option is hidden, and Add Account then
+    /// offers no Google choice.
+    func testGoogleAccountFromVersionOneKeepsWorking() {
+        launch()
+        signInAndWaitForInbox()
+        app.terminate()
+
+        launch(reset: false, googleSignIn: false)
+        XCTAssertTrue(row("Dinner on Friday?").waitForExistence(timeout: 20), "The Google account's inbox did not load")
+        XCTAssertTrue(keychain.contains("oauth.refresh.\(Self.elena)"), "The Google token was lost: \(keychain)")
+        openFolders()
+        app.buttons["Add account"].tap()
+        XCTAssertTrue(app.buttons["addAccount.gmail"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["addAccount.google"].exists, "Google is still a choice")
+    }
 }

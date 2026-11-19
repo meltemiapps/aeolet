@@ -30,10 +30,14 @@ class MacUITestCase: XCTestCase {
 
     // MARK: Launching
 
+    /// `googleSignIn` shows Sign in with Google, which 1.2 hides for new accounts. Most tests keep it on, because
+    /// the mock server is Gmail and they test the Google accounts that 1.0 users already have.
     @discardableResult
-    func launch(reset: Bool = true, fault: String? = nil, extra: [String] = [], environment: [String: String] = [:]) -> XCUIApplication {
+    func launch(reset: Bool = true, fault: String? = nil, googleSignIn: Bool = true, extra: [String] = [],
+                environment: [String: String] = [:]) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-AeoletMockGmail", "-ApplePersistenceIgnoreState", "YES"] + extra
+        if googleSignIn { app.launchArguments.append("-AeoletOfferGoogleSignIn") }
         if reset { app.launchArguments.append("-AeoletResetState") }
         if let fault { app.launchEnvironment["AEOLET_MOCK_FAULT"] = fault }
         app.launchEnvironment.merge(environment) { $1 }

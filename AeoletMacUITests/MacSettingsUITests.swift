@@ -56,6 +56,29 @@ final class MacSettingsUITests: MacUITestCase {
         }
         XCTAssertTrue(app.buttons["Sign in with Google"].waitForExistence(timeout: 10))
     }
+
+    /// 1.2 without Google sign-in: the first window has one Add Account button, the choices are Gmail, Yahoo Mail
+    /// and Other mail account in that order, and the Gmail form explains how to get an app password.
+    func testNewAccountsAreAddedWithoutGoogleSignIn() {
+        launch(googleSignIn: false)
+        let add = app.buttons["signIn.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), "No Add Account button in the first window")
+        XCTAssertFalse(app.buttons["Sign in with Google"].exists, "Google sign-in is still offered")
+        add.click()
+
+        let gmail = app.buttons["addAccount.gmail"]
+        let yahoo = app.buttons["addAccount.yahoo"]
+        let other = app.buttons["addAccount.manual"]
+        XCTAssertTrue(gmail.waitForExistence(timeout: 10), "No Gmail choice")
+        XCTAssertTrue(yahoo.exists && other.exists)
+        XCTAssertFalse(app.buttons["addAccount.google"].exists, "Google is still a choice")
+        XCTAssertLessThan(gmail.frame.minY, yahoo.frame.minY, "Gmail should come first")
+        XCTAssertLessThan(yahoo.frame.minY, other.frame.minY, "Yahoo Mail should come before Other mail account")
+
+        gmail.click()
+        XCTAssertTrue(element("preset.twoStepLink").waitForExistence(timeout: 5), "No 2-Step Verification step")
+        XCTAssertTrue(element("preset.appPasswordLink").exists, "No link to create an app password")
+    }
 }
 
 final class MacErrorUITests: MacUITestCase {

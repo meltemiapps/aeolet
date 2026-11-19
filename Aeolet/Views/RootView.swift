@@ -93,9 +93,12 @@ struct SetupRequiredView: View {
     }
 }
 
+/// The first-run screen. Without Google sign-in it offers one Add Account button, which opens the same choices
+/// as the sidebar: Gmail, Yahoo Mail and Other mail account.
 struct SignInView: View {
     @EnvironmentObject private var app: AppModel
     @State private var showManual = false
+    @State private var showAddAccount = false
 
     var body: some View {
         VStack(spacing: 28) {
@@ -109,29 +112,45 @@ struct SignInView: View {
             }
             Spacer()
             VStack(spacing: 12) {
-                Button {
-                    Task { await app.signIn() }
-                } label: {
-                    Group {
-                        if app.isSigningIn { ProgressView() } else { Text("Sign in with Google") }
+                if AppConfig.offersGoogleSignIn {
+                    Button {
+                        Task { await app.signIn() }
+                    } label: {
+                        Group {
+                            if app.isSigningIn { ProgressView() } else { Text("Sign in with Google") }
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(app.isSigningIn)
-
-                Button("Other Mail Account") { showManual = true }
+                    .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .accessibilityIdentifier("signIn.other")
+                    .disabled(app.isSigningIn)
 
-                Text("With Google, your password goes only to Google and Aeolet receives a revocable token. For other accounts, your password is stored only in this device's Keychain and sent only to your mail server.")
-                    .font(.footnote)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+                    Button("Other Mail Account") { showManual = true }
+                        .controlSize(.large)
+                        .accessibilityIdentifier("signIn.other")
+
+                    Text("With Google, your password goes only to Google and Aeolet receives a revocable token. For other accounts, your password is stored only in this device's Keychain and sent only to your mail server.")
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button { showAddAccount = true } label: {
+                        Text("Add Account").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityIdentifier("signIn.add")
+
+                    Text("Gmail, Yahoo Mail or any mail account with IMAP and SMTP. Your password is stored only in this device's Keychain and sent only to your mail server.")
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(24)
         .sheet(isPresented: $showManual) { ManualAccountSheet() }
+        .sheet(isPresented: $showAddAccount) { AddAccountView() }
+        .onChange(of: app.accounts) { _, _ in showAddAccount = false }
     }
 }

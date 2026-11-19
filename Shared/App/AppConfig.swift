@@ -7,6 +7,20 @@ enum AppConfig {
     static var redirectScheme: String { "com.googleusercontent.apps.\(clientPrefix)" }
     static var redirectURI: String { "\(redirectScheme):/oauth2redirect" }
 
+    /// Whether new accounts can be added with Sign in with Google. Off since 1.2: Google requires a paid
+    /// security assessment (CASA) for the Gmail scope, which Aeolet hasn't had. Accounts already signed in with
+    /// Google keep working, and all the Google code stays, so turning this back on restores the option.
+    static let googleSignInEnabled = false
+
+    /// Whether to show Sign in with Google. Debug runs against the mock Gmail server can opt in with
+    /// -AeoletOfferGoogleSignIn, so UI tests can still add the Google accounts that existing users have.
+    static var offersGoogleSignIn: Bool {
+        #if DEBUG
+        if MockGmail.isActive && ProcessInfo.processInfo.arguments.contains("-AeoletOfferGoogleSignIn") { return true }
+        #endif
+        return googleSignInEnabled
+    }
+
     /// Least privilege that still covers read, label, trash, draft and send. It cannot permanently delete mail.
     static let gmailScope = "https://www.googleapis.com/auth/gmail.modify"
 
