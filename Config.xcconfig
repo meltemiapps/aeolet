@@ -9,7 +9,7 @@ DEVELOPMENT_TEAM = 6Q7HCLY6C6
 PRODUCT_BUNDLE_IDENTIFIER = com.meltemiapps.aeolet
 
 MARKETING_VERSION = 1.2
-CURRENT_PROJECT_VERSION = 1
+CURRENT_PROJECT_VERSION = 2
 
 // Shown under Settings > About once set. Keep the $() so the slashes are not read as a comment.
 PUBLISHER_URL = https:/$()/meltemiapps.co.uk/aeolet/
