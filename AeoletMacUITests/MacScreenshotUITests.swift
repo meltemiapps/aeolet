@@ -24,6 +24,20 @@ final class MacScreenshotUITests: MacUITestCase {
 
     
 
+    /// New compose windows cascade from the viewer and can open partly off a 1440-point-wide screen. Drags the
+    /// compose window by its title bar so it sits centred over the viewer, wholly inside the screenshot.
+    private func centreComposeOverViewer() {
+        let viewer = mainWindow.frame
+        let start = compose.frame
+        let target = CGPoint(x: (viewer.midX - start.width / 2).rounded(),
+                             y: max(viewer.minY + 60, (viewer.midY - start.height / 2).rounded()))
+        let grab = compose.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 300, dy: 14))
+        let drop = grab.withOffset(CGVector(dx: target.x - start.minX, dy: target.y - start.minY))
+        grab.press(forDuration: 0.3, thenDragTo: drop)
+        let moved = compose.frame
+        XCTAssertTrue(viewer.contains(moved), "Compose window \(moved) is not inside the viewer \(viewer)")
+    }
+
     func testCaptureScreenshots() {
         launch(extra: ["-AeoletWindowSize", "1440x900"])
         signInAndWaitForInbox()
@@ -37,9 +51,10 @@ final class MacScreenshotUITests: MacUITestCase {
 
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(compose.waitForExistence(timeout: 10))
+        centreComposeOverViewer()
         type("Sofia Papadaki <sofia@example.org>", into: compose.textFields["compose-to"])
         type("Weekend in Hydra", into: compose.textFields["compose-subject"])
-        type("Hi Sofia,\n\nThe early ferry leaves Piraeus at 8:00. Shall we meet at the gate?\n\nElena", into: compose.textViews["compose-body"])
+        type("Hi Sofia,\n\nThe early ferry leaves Piraeus at eight. Shall we meet at the gate?\n\nElena", into: compose.textViews["compose-body"])
         app.typeKey("a", modifierFlags: [.command, .shift])
         capture("3-Compose")
         app.typeKey("w", modifierFlags: .command)
